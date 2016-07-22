@@ -14,10 +14,12 @@ from sklearn.cluster import KMeans
 
 import sys
 sys.path.append('../spherecluster')
+
 from spherecluster import SphericalKMeans
 
 # modified from
 # http://scikit-learn.org/stable/auto_examples/text/document_clustering.html
+
 
 # Display progress logs on stdout
 logging.basicConfig(level=logging.INFO,
@@ -26,7 +28,7 @@ logging.basicConfig(level=logging.INFO,
 ###############################################################################
 # Optional params
 use_LSA = False
-n_components = 2000
+n_components = 500
 
 ###############################################################################
 # Load some categories from the training set
@@ -53,9 +55,7 @@ labels = dataset.target
 true_k = np.unique(labels).shape[0]
 
 print("Extracting features from the training dataset using a sparse vectorizer")
-vectorizer = TfidfVectorizer(max_df=0.5,
-                             min_df=2, stop_words='english',
-                             use_idf=True)
+vectorizer = TfidfVectorizer(stop_words='english', use_idf=True)
 X = vectorizer.fit_transform(dataset.data)
 
 print("n_samples: %d, n_features: %d" % X.shape)
@@ -79,8 +79,8 @@ if use_LSA:
 
 
 ###############################################################################
-# Regular K-Means clustering
-km = KMeans(n_clusters=true_k, init='k-means++', max_iter=100)
+# K-Means clustering
+km = KMeans(n_clusters=true_k, init='k-means++', n_init=20)
 
 print("Clustering with %s" % km)
 km.fit(X)
@@ -91,27 +91,31 @@ print("Completeness: %0.3f" % metrics.completeness_score(labels, km.labels_))
 print("V-measure: %0.3f" % metrics.v_measure_score(labels, km.labels_))
 print("Adjusted Rand-Index: %.3f"
       % metrics.adjusted_rand_score(labels, km.labels_))
-print("Silhouette Coefficient: %0.3f"
-      % metrics.silhouette_score(X, km.labels_))
+print("Silhouette Coefficient (euclidean): %0.3f"
+      % metrics.silhouette_score(X, km.labels_, metric='euclidean'))
+print("Silhouette Coefficient (cosine): %0.3f"
+      % metrics.silhouette_score(X, km.labels_, metric='cosine'))
 
 print()
 
 
 ###############################################################################
-# K-Means clustering
-km = SphericalKMeans(n_clusters=true_k, init='k-means++', max_iter=100)
+# Spherical K-Means clustering
+skm = SphericalKMeans(n_clusters=true_k, init='k-means++', n_init=20)
 
-print("Clustering with %s" % km)
-km.fit(X)
+print("Clustering with %s" % skm)
+skm.fit(X)
 print()
 
-print("Homogeneity: %0.3f" % metrics.homogeneity_score(labels, km.labels_))
-print("Completeness: %0.3f" % metrics.completeness_score(labels, km.labels_))
-print("V-measure: %0.3f" % metrics.v_measure_score(labels, km.labels_))
+print("Homogeneity: %0.3f" % metrics.homogeneity_score(labels, skm.labels_))
+print("Completeness: %0.3f" % metrics.completeness_score(labels, skm.labels_))
+print("V-measure: %0.3f" % metrics.v_measure_score(labels, skm.labels_))
 print("Adjusted Rand-Index: %.3f"
-      % metrics.adjusted_rand_score(labels, km.labels_))
-print("Silhouette Coefficient: %0.3f"
-      % metrics.silhouette_score(X, km.labels_))
+      % metrics.adjusted_rand_score(labels, skm.labels_))
+print("Silhouette Coefficient (euclidean): %0.3f"
+      % metrics.silhouette_score(X, skm.labels_, metric='euclidean'))
+print("Silhouette Coefficient (cosine): %0.3f"
+      % metrics.silhouette_score(X, skm.labels_, metric='cosine'))
 
 print()
 
