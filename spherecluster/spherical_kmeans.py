@@ -3,7 +3,6 @@ import warnings
 import numpy as np
 import scipy.sparse as sp
 
-from sklearn.utils.extmath import row_norms, squared_norm
 from sklearn.cluster import KMeans
 from sklearn.cluster.k_means_ import (
     _init_centroids,
@@ -11,13 +10,15 @@ from sklearn.cluster.k_means_ import (
     _tolerance,
     _validate_center_shape,
 )
+from sklearn.utils import (
+    check_array,
+    check_random_state,
+    as_float_array,
+)
 from sklearn import _k_means
 from sklearn.preprocessing import normalize
 from sklearn.externals.joblib import Parallel, delayed
-from sklearn.utils import check_array
-from sklearn.utils import check_random_state
-from ..utils import as_float_array
-
+from sklearn.utils.extmath import row_norms, squared_norm
 
 
 def _spherical_kmeans_single_lloyd(X, n_clusters, max_iter=300,
