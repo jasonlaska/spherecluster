@@ -15,7 +15,7 @@ from sklearn.utils import (
     check_random_state,
     as_float_array,
 )
-from sklearn import _k_means
+from sklearn.cluster import _k_means
 from sklearn.preprocessing import normalize
 from sklearn.externals.joblib import Parallel, delayed
 from sklearn.utils.extmath import row_norms, squared_norm
@@ -274,7 +274,7 @@ class SphericalKMeans(KMeans):
                 X, n_clusters=self.n_clusters, init=self.init,
                 n_init=self.n_init, max_iter=self.max_iter, verbose=self.verbose,
                 tol=self.tol, random_state=random_state, copy_x=self.copy_x,
-                n_jobs=self.n_jobs, algorithm=self.algorithm,
+                n_jobs=self.n_jobs,
                 return_n_iter=True)
 
         return self
