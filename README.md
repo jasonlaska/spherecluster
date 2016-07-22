@@ -8,8 +8,8 @@ Notes to clean up later:
 - Spherical K-Means
 
 - Mixture of von Mises-Fisher
-* hard-moVMF
-* soft-moVMF
+-- hard-moVMF
+-- soft-moVMF
 
 from
 Clustering on the Unit Hypersphere using von Mises-Fisher Distributions
