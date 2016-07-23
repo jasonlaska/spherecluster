@@ -5,7 +5,12 @@ from scipy.special import jv
 #from sklearn.base import BaseEstimator, ClusterMixin, TransformerMixin
 #from sklearn.cluster.k_means_ import _init_centroids, _labels_inertia
 from sklearn.cluster.k_means_ import _init_centroids
-from sklearn.utils.extmath import row_norms, squared_norm
+from sklearn.utils import (
+    #check_array,
+    check_random_state,
+    #as_float_array,
+)
+from sklearn.utils.extmath import squared_norm
 
 
 
@@ -83,11 +88,11 @@ def _soft_moVMF(X, n_clusters, max_iter=300, verbose=False,
             f[cc, :] = _vmf_distribution(X, concentrations[cc], centers[cc, :])
 
         posterior = np.zeros((n_clusters, n_examples))
+        for cc in range(n_clusters):
+            posterior[cc, :] = weights[cc] * f[cc, :]
+
         for ee in range(n_examples):
-            normalization = np.sum(f[:, ee], axis=1)
-            for cc in range(n_clusters):
-                posterior[cc, ee] = weights[cc] * f[cc, ee]
-                posterior[cc, ee] /= normalization
+            posterior[:, ee] /= np.sum(weights * f[:, ee])
 
         # (maximization)
         centers, weights, concentrations = _update_params(X, posterior)
