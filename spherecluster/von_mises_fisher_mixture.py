@@ -55,7 +55,7 @@ def _update_params(X, posterior):
     return centers, weights, concentrations
 
 
-def _soft_moVMF(X, n_clusters, max_iter=300, verbose=False,
+def _moVMF(X, n_clusters, posterior_type='soft', max_iter=300, verbose=False,
                init='k-means++', random_state=None, tol=1e-4):
     random_state = check_random_state(random_state)
 
@@ -88,11 +88,21 @@ def _soft_moVMF(X, n_clusters, max_iter=300, verbose=False,
             f[cc, :] = _vmf_distribution(X, concentrations[cc], centers[cc, :])
 
         posterior = np.zeros((n_clusters, n_examples))
-        for cc in range(n_clusters):
-            posterior[cc, :] = weights[cc] * f[cc, :]
+        if posterior_type == 'soft':
+            #for cc in range(n_clusters):
+            #    posterior[cc, :] = weights[cc] * f[cc, :]
+            #
+            #for ee in range(n_examples):
+            #    posterior[:, ee] /= np.sum(weights * f[:, ee])
 
-        for ee in range(n_examples):
-            posterior[:, ee] /= np.sum(weights * f[:, ee])
+            # equiv?
+            posterior = np.tile(weights.T, (n_examples, 1)).T * f
+            for ee in range(n_examples):
+                posterior[:, ee] /= np.sum(posterior[:, ee])
+
+        elif posterior_type == 'hard':
+            for ee in range(n_examples):
+                posterior[np.argmax(weights * f[:, ee]), ee] = 1.0
 
         # (maximization)
         centers, weights, concentrations = _update_params(X, posterior)
