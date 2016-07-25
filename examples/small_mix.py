@@ -1,6 +1,7 @@
 import numpy as np
 from matplotlib import pyplot as plt
 from sklearn.cluster import KMeans
+from sklearn import metrics
 
 import sys
 sys.path.append('../spherecluster')
@@ -23,17 +24,18 @@ Provides a basic smell test that the algoriths are performing as intended.
 mu_0 = np.array([-0.251, -0.968])
 mu_1 = np.array([0.399, 0.917])
 mus = [mu_0, mu_1]
-kappa_0 = 3 # concentration parameter
-kappa_1 = 3 # concentration parameter
+kappa_0 = 4 # concentration parameter
+kappa_1 = 1.5 # concentration parameter
 kappas = [kappa_0, kappa_1]
-num_points_per_class = 100
+num_points_per_class = 50
 
 X_0 = sample_vMF.vMF(mu_0, kappa_0, num_points_per_class)
 X_1 = sample_vMF.vMF(mu_1, kappa_1, num_points_per_class)
 X = np.zeros((2 * num_points_per_class, 2))
 X[:num_points_per_class, :] = X_0
 X[num_points_per_class:, :] = X_1
-
+labels = np.zeros((2 * num_points_per_class, ))
+labels[num_points_per_class:] = 1
 
 ###############################################################################
 # K-Means clustering
@@ -71,7 +73,7 @@ skm_mu_1_error = np.linalg.norm(mus[1] - skm.cluster_centers_[skm_mu_1_idx])
 
 ###############################################################################
 # Mixture of von Mises Fisher clustering (soft)
-vmf_soft = VonMisesFisherMixture(n_clusters=2, posterior_type='soft', n_init=10)
+vmf_soft = VonMisesFisherMixture(n_clusters=2, posterior_type='soft', n_init=20)
 vmf_soft.fit(X)
 
 cdists = []
@@ -89,7 +91,7 @@ vmf_soft_mu_1_error = np.linalg.norm(
 
 ###############################################################################
 # Mixture of von Mises Fisher clustering (hard)
-vmf_hard = VonMisesFisherMixture(n_clusters=2, posterior_type='hard', n_init=10)
+vmf_hard = VonMisesFisherMixture(n_clusters=2, posterior_type='hard', n_init=20)
 vmf_hard.fit(X)
 
 cdists = []
@@ -205,5 +207,24 @@ print 'vmf-hard kappas {}'.format(vmf_hard.concentrations_[[vmf_hard_mu_0_idx, v
 print '---'
 print 'vmf-soft weights {}'.format(vmf_soft.weights_[[vmf_soft_mu_0_idx, vmf_soft_mu_1_idx]])
 print 'vmf-hard weights {}'.format(vmf_hard.weights_[[vmf_hard_mu_0_idx, vmf_hard_mu_1_idx]])
+
+print '---'
+print("Homogeneity: %0.3f (k-means)" % metrics.homogeneity_score(labels, km.labels_))
+print("Homogeneity: %0.3f (spherical k-means)" % metrics.homogeneity_score(labels, skm.labels_))
+print("Homogeneity: %0.3f (vmf-soft)" % metrics.homogeneity_score(labels, vmf_soft.labels_))
+print("Homogeneity: %0.3f (vmf-hard)" % metrics.homogeneity_score(labels, vmf_hard.labels_))
+
+print '---'
+print("Completeness: %0.3f (k-means)" % metrics.completeness_score(labels, km.labels_))
+print("Completeness: %0.3f (spherical k-means)" % metrics.completeness_score(labels, skm.labels_))
+print("Completeness: %0.3f" % metrics.completeness_score(labels, vmf_soft.labels_))
+print("Completeness: %0.3f" % metrics.completeness_score(labels, vmf_hard.labels_))
+
+print '---'
+print("V-measure: %0.3f (k-means)" % metrics.v_measure_score(labels, km.labels_))
+print("V-measure: %0.3f (spherical k-means)" % metrics.v_measure_score(labels, skm.labels_))
+print("V-measure: %0.3f (vmf-soft)" % metrics.v_measure_score(labels, vmf_soft.labels_))
+print("V-measure: %0.3f (vmf-hard)" % metrics.v_measure_score(labels, vmf_hard.labels_))
+
 
 raw_input()

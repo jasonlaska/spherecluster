@@ -28,7 +28,7 @@ def _inertia_from_labels(X, centers, labels):
     n_examples, n_features = X.shape
     intertia = np.zeros((n_examples, ))
     for ee in range(n_examples):
-        intertia[ee] = np.dot(X[ee, :], centers[labels[ee], :].T)
+        intertia[ee] = np.dot(X[ee, :], centers[int(labels[ee]), :].T)
 
     return np.sum(intertia)
 
@@ -79,7 +79,7 @@ def _update_params(X, posterior):
     concentrations = np.zeros((n_clusters,))
     for cc in range(n_clusters):
         # update weights (alpha)
-        weights[cc] = 1. * np.sum(posterior[cc, :]) / n_examples
+        weights[cc] = np.mean(posterior[cc, :])
 
         # update centers (mu)
         for ee in range(n_examples):
@@ -117,7 +117,7 @@ def _moVMF(X, n_clusters, posterior_type='soft', max_iter=300, verbose=False,
     weights = weights / np.sum(weights)
 
     # init concentrations (kappas)
-    concentrations = np.ones((n_clusters,))
+    concentrations = 10 * np.ones((n_clusters,))
     #concentrations = concentrations / np.sum(concentrations)
 
     n_examples, n_features = np.shape(X)
@@ -141,8 +141,9 @@ def _moVMF(X, n_clusters, posterior_type='soft', max_iter=300, verbose=False,
                 posterior[:, ee] /= np.sum(posterior[:, ee])
 
         elif posterior_type == 'hard':
+            weighted_f = np.tile(weights.T, (n_examples, 1)).T * f
             for ee in range(n_examples):
-                posterior[np.argmax(weights * f[:, ee]), ee] = 1.0
+                posterior[np.argmax(weighted_f[:, ee]), ee] = 1.0
 
         # (maximization)
         centers, weights, concentrations = _update_params(X, posterior)
