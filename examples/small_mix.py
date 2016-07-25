@@ -24,10 +24,10 @@ Provides a basic smell test that the algoriths are performing as intended.
 mu_0 = np.array([-0.251, -0.968])
 mu_1 = np.array([0.399, 0.917])
 mus = [mu_0, mu_1]
-kappa_0 = 4 # concentration parameter
-kappa_1 = 1.5 # concentration parameter
+kappa_0 = 8 # concentration parameter
+kappa_1 = 0.5 # concentration parameter
 kappas = [kappa_0, kappa_1]
-num_points_per_class = 50
+num_points_per_class = 300
 
 X_0 = sample_vMF.vMF(mu_0, kappa_0, num_points_per_class)
 X_1 = sample_vMF.vMF(mu_1, kappa_1, num_points_per_class)
@@ -73,7 +73,7 @@ skm_mu_1_error = np.linalg.norm(mus[1] - skm.cluster_centers_[skm_mu_1_idx])
 
 ###############################################################################
 # Mixture of von Mises Fisher clustering (soft)
-vmf_soft = VonMisesFisherMixture(n_clusters=2, posterior_type='soft', n_init=20)
+vmf_soft = VonMisesFisherMixture(n_clusters=2, posterior_type='soft', n_init=10)
 vmf_soft.fit(X)
 
 cdists = []
@@ -91,7 +91,7 @@ vmf_soft_mu_1_error = np.linalg.norm(
 
 ###############################################################################
 # Mixture of von Mises Fisher clustering (hard)
-vmf_hard = VonMisesFisherMixture(n_clusters=2, posterior_type='hard', n_init=20)
+vmf_hard = VonMisesFisherMixture(n_clusters=2, posterior_type='hard', n_init=10)
 vmf_hard.fit(X)
 
 cdists = []

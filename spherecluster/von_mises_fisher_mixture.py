@@ -30,7 +30,7 @@ def _inertia_from_labels(X, centers, labels):
     for ee in range(n_examples):
         intertia[ee] = np.dot(X[ee, :], centers[int(labels[ee]), :].T)
 
-    return np.sum(intertia)
+    return 1 - np.sum(intertia)
 
 def _labels_inertia(X, centers):
     """Compute labels and interia with cosine distance.
@@ -49,7 +49,7 @@ def _labels_inertia(X, centers):
         labels[ee] = np.argmin(dists)
         intertia[ee] = dists(labels[ee])
 
-    return labels, np.sum(intertia)
+    return labels, 1 - np.sum(intertia)
 
 def _vmf(X, kappa, mu):
     n_examples, n_features = X.shape
@@ -86,8 +86,8 @@ def _update_params(X, posterior):
             centers[cc, :] += 1. * X[ee, :] * posterior[cc, ee]
 
         # precomputes
-        center_norm = 1. * np.linalg.norm(centers[cc, :])
-        rbar = center_norm / (1. * n_examples * weights[cc])
+        center_norm = np.linalg.norm(centers[cc, :])
+        rbar = center_norm / (n_examples * weights[cc])
 
         # normalize centers
         centers[cc, :] = 1. * centers[cc, :] / center_norm
@@ -100,7 +100,7 @@ def _update_params(X, posterior):
 
 
 def _moVMF(X, n_clusters, posterior_type='soft', max_iter=300, verbose=False,
-               init='k-means++', random_state=None, tol=1e-4):
+               init='k-means++', random_state=None, tol=1e-6):
     """Mixture of von Mises Fisher clustering.
 
     Implements the algorithms (i) and (ii) from
@@ -117,8 +117,7 @@ def _moVMF(X, n_clusters, posterior_type='soft', max_iter=300, verbose=False,
     weights = weights / np.sum(weights)
 
     # init concentrations (kappas)
-    concentrations = 10 * np.ones((n_clusters,))
-    #concentrations = concentrations / np.sum(concentrations)
+    concentrations = np.ones((n_clusters,))
 
     n_examples, n_features = np.shape(X)
 
@@ -169,7 +168,7 @@ def _moVMF(X, n_clusters, posterior_type='soft', max_iter=300, verbose=False,
 
 def moVMF(X, n_clusters, posterior_type='soft', n_init=10, n_jobs=1,
             max_iter=300, verbose=False, init='k-means++', random_state=None,
-            tol=1e-4, copy_x=True):
+            tol=1e-6, copy_x=True):
     """
     """
     if n_init <= 0:
@@ -251,7 +250,7 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
     """
     def __init__(self, n_clusters, posterior_type='soft', n_init=10, n_jobs=1,
             max_iter=300, verbose=False, init='k-means++', random_state=None,
-            tol=1e-4, copy_x=True):
+            tol=1e-6, copy_x=True):
         self.n_clusters = n_clusters
         self.posterior_type = posterior_type
         self.n_init = n_init

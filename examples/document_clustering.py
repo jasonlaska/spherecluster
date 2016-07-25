@@ -16,6 +16,7 @@ import sys
 sys.path.append('../spherecluster')
 
 from spherecluster import SphericalKMeans
+from spherecluster import VonMisesFisherMixture
 
 # modified from
 # http://scikit-learn.org/stable/auto_examples/text/document_clustering.html
