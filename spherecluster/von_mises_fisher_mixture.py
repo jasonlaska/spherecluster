@@ -19,6 +19,7 @@ from sklearn.utils import (
 )
 from sklearn.utils.extmath import squared_norm
 from sklearn.metrics.pairwise import cosine_distances
+from sklearn.externals.joblib import Parallel, delayed
 
 
 def _inertia_from_labels(X, centers, labels):
@@ -219,27 +220,27 @@ def moVMF(X, n_clusters, posterior_type='soft', n_init=10, n_jobs=1,
                 best_concentrations = concentrations.copy()
                 best_posterior = posterior.copy()
                 best_inertia = inertia
-    """
     else:
         # parallelisation of k-means runs
         seeds = random_state.randint(np.iinfo(np.int32).max, size=n_init)
         results = Parallel(n_jobs=n_jobs, verbose=0)(
-            delayed(_spherical_kmeans_single_lloyd)(X, n_clusters,
-                                   max_iter=max_iter, init=init,
-                                   verbose=verbose, tol=tol,
-                                   x_squared_norms=x_squared_norms,
-                                   # Change seed to ensure variety
-                                   random_state=seed)
+            delayed(_moVMF)(X,
+                    n_clusters,
+                    posterior_type=posterior_type,
+                    max_iter=max_iter,
+                    verbose=verbose,
+                    init=init,
+                    random_state=random_state,
+                    tol=tol)
             for seed in seeds)
 
         # Get results with the lowest inertia
-        labels, inertia, centers, n_iters = zip(*results)
+        centers, weights, concentrations, posterior, labels, inertia = \
+                zip(*results)
         best = np.argmin(inertia)
         best_labels = labels[best]
         best_inertia = inertia[best]
         best_centers = centers[best]
-        best_n_iter = n_iters[best]
-    """
 
     return (best_centers, best_labels, best_inertia, best_weights,
         best_concentrations, best_posterior)
