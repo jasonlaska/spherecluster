@@ -1,8 +1,10 @@
 import warnings
 
 import numpy as np
+import scipy.sparse as sp
 from scipy.special import iv # modified bessel function of first kind
 from numpy import i0 # Modified Bessel function of the first kind, order 0, I_0
+from scipy.sparse import csr_matrix
 
 from sklearn.base import BaseEstimator, ClusterMixin, TransformerMixin
 from sklearn.cluster.k_means_ import (
@@ -52,9 +54,11 @@ def _labels_inertia(X, centers):
     return labels, 1 - np.sum(intertia)
 
 def _vmf(X, kappa, mu):
+    # use the sparse dot provided by a csr_matrix
     n_examples, n_features = X.shape
-    return _vmf_normalize(kappa, n_features) * np.exp(kappa * np.dot(mu, X.T))
-
+    #return _vmf_normalize(kappa, n_features) * np.exp(kappa * np.dot(mu, X.T))
+    print X.dot(mu.T).shape
+    return _vmf_normalize(kappa, n_features) * np.exp(kappa * X.dot(mu.T).T)
 
 def _vmf_normalize(kappa, dim):
     num = np.power(kappa, dim/2. - 1.)
@@ -75,8 +79,13 @@ def _update_params(X, posterior):
     n_examples, n_features = X.shape
     n_clusters, n_examples = posterior.shape
     weights = np.zeros((n_clusters,))
-    centers = np.zeros((n_clusters, n_features))
     concentrations = np.zeros((n_clusters,))
+
+    if sp.issparse(X):
+        centers = csr_matrix((n_clusters, n_features))
+    else:
+        centers = np.zeros((n_clusters, n_features)) # this needs to be sparse
+
     for cc in range(n_clusters):
         # update weights (alpha)
         weights[cc] = np.mean(posterior[cc, :])
@@ -86,7 +95,11 @@ def _update_params(X, posterior):
             centers[cc, :] += 1. * X[ee, :] * posterior[cc, ee]
 
         # precomputes
-        center_norm = np.linalg.norm(centers[cc, :])
+        if sp.issparse(centers):
+            center_norm = sp.linalg.norm(centers[cc, :])
+        else:
+            center_norm = np.linalg.norm(centers[cc, :])
+
         rbar = center_norm / (n_examples * weights[cc])
 
         # normalize centers

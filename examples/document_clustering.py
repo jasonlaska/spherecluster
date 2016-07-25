@@ -120,3 +120,46 @@ print("Silhouette Coefficient (cosine): %0.3f"
 
 print()
 
+
+###############################################################################
+# Mixture of von Mises Fisher clustering (soft)
+vmf_soft = VonMisesFisherMixture(n_clusters=true_k, posterior_type='soft',
+    init='k-means++', n_init=20, verbose=True)
+
+print("Clustering with %s" % vmf_soft)
+vmf_soft.fit(X)
+print()
+
+print("Homogeneity: %0.3f" % metrics.homogeneity_score(labels, vmf_soft.labels_))
+print("Completeness: %0.3f" % metrics.completeness_score(labels, vmf_soft.labels_))
+print("V-measure: %0.3f" % metrics.v_measure_score(labels, vmf_soft.labels_))
+print("Adjusted Rand-Index: %.3f"
+      % metrics.adjusted_rand_score(labels, vmf_soft.labels_))
+print("Silhouette Coefficient (euclidean): %0.3f"
+      % metrics.silhouette_score(X, vmf_soft.labels_, metric='euclidean'))
+print("Silhouette Coefficient (cosine): %0.3f"
+      % metrics.silhouette_score(X, vmf_soft.labels_, metric='cosine'))
+
+print()
+
+
+###############################################################################
+# Mixture of von Mises Fisher clustering (hard)
+vmf_hard = VonMisesFisherMixture(n_clusters=true_k, posterior_type='hard',
+    init='k-means++', n_init=20, verbose=True)
+
+print("Clustering with %s" % vmf_hard)
+vmf_hard.fit(X)
+print()
+
+print("Homogeneity: %0.3f" % metrics.homogeneity_score(labels, vmf_hard.labels_))
+print("Completeness: %0.3f" % metrics.completeness_score(labels, vmf_hard.labels_))
+print("V-measure: %0.3f" % metrics.v_measure_score(labels, vmf_hard.labels_))
+print("Adjusted Rand-Index: %.3f"
+      % metrics.adjusted_rand_score(labels, vmf_hard.labels_))
+print("Silhouette Coefficient (euclidean): %0.3f"
+      % metrics.silhouette_score(X, vmf_hard.labels_, metric='euclidean'))
+print("Silhouette Coefficient (cosine): %0.3f"
+      % metrics.silhouette_score(X, vmf_hard.labels_, metric='cosine'))
+
+print()
