@@ -6,7 +6,6 @@ from numpy import i0 # Modified Bessel function of the first kind, order 0, I_0
 
 from sklearn.base import BaseEstimator, ClusterMixin, TransformerMixin
 from sklearn.cluster.k_means_ import (
-    _labels_inertia,
     _init_centroids,
     _tolerance,
     _validate_center_shape,
@@ -18,7 +17,7 @@ from sklearn.utils import (
     check_random_state,
     as_float_array,
 )
-from sklearn.utils.extmath import row_norms, squared_norm
+from sklearn.utils.extmath import squared_norm
 from sklearn.metrics.pairwise import cosine_distances
 
 
@@ -31,6 +30,25 @@ def _inertia_from_labels(X, centers, labels):
         intertia[ee] = np.dot(X[ee, :], centers[labels[ee], :].T)
 
     return np.sum(intertia)
+
+def _labels_inertia(X, centers):
+    """Compute labels and interia with cosine distance.
+    """
+    n_examples, n_features = X.shape
+    n_clusters, n_features = centers.shape
+
+    labels = np.zeros((n_examples, ))
+    intertia = np.zeros((n_examples, ))
+
+    for ee in range(n_examples):
+        dists = np.zeros((n_clusters, ))
+        for cc in range(n_clusters):
+            dists[cc] = np.dot(X[ee, :], centers[cc, :].T)
+
+        labels[ee] = np.argmin(dists)
+        intertia[ee] = dists(labels[ee])
+
+    return labels, np.sum(intertia)
 
 def _vmf(X, kappa, mu):
     n_examples, n_features = X.shape
@@ -139,15 +157,8 @@ def _moVMF(X, n_clusters, posterior_type='soft', max_iter=300, verbose=False,
                       % (iter, tolcheck, tol))
             break
 
-    # get labels and inertia (note, this uses euclidean distance)
-    #distances = np.zeros(shape=(X.shape[0],), dtype=X.dtype) # alloc
-    #labels, inertia = \
-    #    _labels_inertia(X, np.ones(X.shape[0]), centers,
-    #                    precompute_distances=None,
-    #                    distances=distances)
-
     # labels come for free via posterior
-    labels = np.zeros((n_examples))
+    labels = np.zeros((n_examples, ))
     for ee in range(n_examples):
         labels[ee] = np.argmax(posterior[:, ee])
 
@@ -371,8 +382,7 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
         check_is_fitted(self, 'cluster_centers_')
 
         X = self._check_test_data(X)
-        x_squared_norms = row_norms(X, squared=True)
-        return _labels_inertia(X, x_squared_norms, self.cluster_centers_)[0]
+        return _labels_inertia(X, self.cluster_centers_)[0]
 
 
     def score(self, X, y=None):
@@ -391,6 +401,5 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
         check_is_fitted(self, 'cluster_centers_')
 
         X = self._check_test_data(X)
-        x_squared_norms = row_norms(X, squared=True)
-        return -_labels_inertia(X, x_squared_norms, self.cluster_centers_)[1]
+        return -_labels_inertia(X, self.cluster_centers_)[1]
 
