@@ -130,8 +130,6 @@ def _moVMF(X, n_clusters, posterior_type='soft', max_iter=300, verbose=False,
 
         # (expectation)
 
-        # estimate posterior
-
         f = np.zeros((n_clusters, n_examples))
         for cc in range(n_clusters):
             f[cc, :] = _vmf(X, concentrations[cc], centers[cc, :])
