@@ -8,7 +8,6 @@ from sklearn.preprocessing import Normalizer
 from sklearn import metrics
 
 import numpy as np
-import scipy as sp
 
 import logging
 from sklearn.cluster import KMeans
@@ -93,12 +92,16 @@ print("Completeness: %0.3f" % metrics.completeness_score(labels, km.labels_))
 print("V-measure: %0.3f" % metrics.v_measure_score(labels, km.labels_))
 print("Adjusted Rand-Index: %.3f"
       % metrics.adjusted_rand_score(labels, km.labels_))
+print("Adjusted Mututal Information: %.3f"
+      % metrics.adjusted_mutual_info_score(labels, km.labels_))
 print("Silhouette Coefficient (euclidean): %0.3f"
       % metrics.silhouette_score(X, km.labels_, metric='euclidean'))
 print("Silhouette Coefficient (cosine): %0.3f"
       % metrics.silhouette_score(X, km.labels_, metric='cosine'))
 
 print()
+
+
 
 ###############################################################################
 # Spherical K-Means clustering
@@ -113,6 +116,8 @@ print("Completeness: %0.3f" % metrics.completeness_score(labels, skm.labels_))
 print("V-measure: %0.3f" % metrics.v_measure_score(labels, skm.labels_))
 print("Adjusted Rand-Index: %.3f"
       % metrics.adjusted_rand_score(labels, skm.labels_))
+print("Adjusted Mututal Information: %.3f"
+      % metrics.adjusted_mutual_info_score(labels, skm.labels_))
 print("Silhouette Coefficient (euclidean): %0.3f"
       % metrics.silhouette_score(X, skm.labels_, metric='euclidean'))
 print("Silhouette Coefficient (cosine): %0.3f"
@@ -125,19 +130,21 @@ print()
 ###############################################################################
 # Mixture of von Mises Fisher clustering (soft)
 vmf_soft = VonMisesFisherMixture(n_clusters=true_k, posterior_type='soft',
-    init='k-means++', n_init=20, verbose=True)
+    init='random-orthonormal', n_init=5, verbose=True)
 
 print("Clustering with %s" % vmf_soft)
 vmf_soft.fit(X)
 print()
-
-print(vmf_soft.labels_)
+print('weights: {}'.format(vmf_soft.weights_))
+print('concentrations: {}'.format(vmf_soft.concentrations_))
 
 print("Homogeneity: %0.3f" % metrics.homogeneity_score(labels, vmf_soft.labels_))
 print("Completeness: %0.3f" % metrics.completeness_score(labels, vmf_soft.labels_))
 print("V-measure: %0.3f" % metrics.v_measure_score(labels, vmf_soft.labels_))
 print("Adjusted Rand-Index: %.3f"
       % metrics.adjusted_rand_score(labels, vmf_soft.labels_))
+print("Adjusted Mututal Information: %.3f"
+      % metrics.adjusted_mutual_info_score(labels, vmf_soft.labels_))
 print("Silhouette Coefficient (euclidean): %0.3f"
       % metrics.silhouette_score(X, vmf_soft.labels_, metric='euclidean'))
 print("Silhouette Coefficient (cosine): %0.3f"
@@ -151,19 +158,21 @@ print()
 ###############################################################################
 # Mixture of von Mises Fisher clustering (hard)
 vmf_hard = VonMisesFisherMixture(n_clusters=true_k, posterior_type='hard',
-    init='k-means++', n_init=20, verbose=True)
+    init='random-orthonormal', n_init=5, verbose=True)
 
 print("Clustering with %s" % vmf_hard)
 vmf_hard.fit(X)
 print()
-
-print(vmf_hard.labels_)
+print('weights: {}'.format(vmf_hard.weights_))
+print('concentrations: {}'.format(vmf_hard.concentrations_))
 
 print("Homogeneity: %0.3f" % metrics.homogeneity_score(labels, vmf_hard.labels_))
 print("Completeness: %0.3f" % metrics.completeness_score(labels, vmf_hard.labels_))
 print("V-measure: %0.3f" % metrics.v_measure_score(labels, vmf_hard.labels_))
 print("Adjusted Rand-Index: %.3f"
       % metrics.adjusted_rand_score(labels, vmf_hard.labels_))
+print("Adjusted Mututal Information: %.3f"
+      % metrics.adjusted_mutual_info_score(labels, vmf_hard.labels_))
 print("Silhouette Coefficient (euclidean): %0.3f"
       % metrics.silhouette_score(X, vmf_hard.labels_, metric='euclidean'))
 print("Silhouette Coefficient (cosine): %0.3f"

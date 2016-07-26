@@ -168,7 +168,25 @@ def _update_params(X, posterior):
 
 def _init_unit_centers(X, n_clusters, random_state, init):
     """Initializes unit norm centers.
-    init:  k-means++, spherical-k-means, random, random-orthonormal
+
+    Parameters
+    ----------
+    X : array-like or sparse matrix, shape=(n_samples, n_features)
+
+    n_clusters : int, optional, default: 8
+        The number of clusters to form as well as the number of
+        centroids to generate.
+
+    random_state : integer or numpy.RandomState, optional
+        The generator used to initialize the centers. If an integer is
+        given, it fixes the seed. Defaults to the global numpy random
+        number generator.
+
+    init:  (string) one of
+        k-means++ : uses sklearn k-means++ initialization algorithm
+        spherical-k-means : use centroids form one pass of spherical k-means
+        random : random unit norm vectors
+        random-orthonormal : random orthonormal vectors
     """
     n_examples, n_features = np.shape(X)
     if init == 'spherical-k-means':
@@ -217,7 +235,7 @@ def _init_unit_centers(X, n_clusters, random_state, init):
 
 
 def _moVMF(X, n_clusters, posterior_type='soft', max_iter=300, verbose=False,
-               init='k-means++', random_state=None, tol=1e-6):
+               init='random-orthonormal', random_state=None, tol=1e-6):
     """Mixture of von Mises Fisher clustering.
 
     Implements the algorithms (i) and (ii) from
@@ -432,9 +450,6 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
                 n_init=self.n_init, n_jobs=self.n_jobs, max_iter=self.max_iter,
                 verbose=self.verbose, init=self.init,
                 random_state=random_state, tol=self.tol, copy_x=self.copy_x)
-
-        print self.weights_
-        print self.concentrations_
 
         return self
 
