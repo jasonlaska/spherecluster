@@ -28,7 +28,7 @@ logging.basicConfig(level=logging.INFO,
 
 ###############################################################################
 # Optional params
-use_LSA = False
+use_LSA = True
 n_components = 500
 
 ###############################################################################
@@ -62,7 +62,7 @@ X = vectorizer.fit_transform(dataset.data)
 print("n_samples: %d, n_features: %d" % X.shape)
 print()
 
-
+"""
 ###############################################################################
 # LSA for dimensionality reduction (and finding dense vectors)
 if use_LSA:
@@ -77,8 +77,9 @@ if use_LSA:
       int(explained_variance * 100)))
 
   print()
+"""
 
-
+"""
 ###############################################################################
 # K-Means clustering
 km = KMeans(n_clusters=true_k, init='k-means++', n_init=20)
@@ -119,16 +120,19 @@ print("Silhouette Coefficient (cosine): %0.3f"
       % metrics.silhouette_score(X, skm.labels_, metric='cosine'))
 
 print()
+"""
 
-
+"""
 ###############################################################################
 # Mixture of von Mises Fisher clustering (soft)
 vmf_soft = VonMisesFisherMixture(n_clusters=true_k, posterior_type='soft',
-    init='k-means++', n_init=20, verbose=True)
+    init='k-means++', n_init=1, verbose=True)
 
 print("Clustering with %s" % vmf_soft)
 vmf_soft.fit(X)
 print()
+
+print(vmf_soft.labels_)
 
 print("Homogeneity: %0.3f" % metrics.homogeneity_score(labels, vmf_soft.labels_))
 print("Completeness: %0.3f" % metrics.completeness_score(labels, vmf_soft.labels_))
@@ -141,16 +145,19 @@ print("Silhouette Coefficient (cosine): %0.3f"
       % metrics.silhouette_score(X, vmf_soft.labels_, metric='cosine'))
 
 print()
+"""
 
 
 ###############################################################################
 # Mixture of von Mises Fisher clustering (hard)
 vmf_hard = VonMisesFisherMixture(n_clusters=true_k, posterior_type='hard',
-    init='k-means++', n_init=20, verbose=True)
+    init='k-means++', n_init=1, verbose=True, max_iter=3)
 
 print("Clustering with %s" % vmf_hard)
 vmf_hard.fit(X)
 print()
+
+print(vmf_hard.labels_)
 
 print("Homogeneity: %0.3f" % metrics.homogeneity_score(labels, vmf_hard.labels_))
 print("Completeness: %0.3f" % metrics.completeness_score(labels, vmf_hard.labels_))
@@ -163,3 +170,4 @@ print("Silhouette Coefficient (cosine): %0.3f"
       % metrics.silhouette_score(X, vmf_hard.labels_, metric='cosine'))
 
 print()
+

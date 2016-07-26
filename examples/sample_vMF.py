@@ -12,6 +12,13 @@ Rejection sample scheme from
 http://math.stackexchange.com/questions/1326492/sampling-from-the-von-mises-fisher-distribution
 http://www.mitsuba-renderer.org/~wenzel/files/vmf.pdf
 
+# good stuff here:
+https://cran.r-project.org/web/packages/movMF/vignettes/movMF.pdf
+https://en.wikipedia.org/wiki/Von_Mises%E2%80%93Fisher_distribution
+http://www.kyb.mpg.de/fileadmin/user_upload/files/publications/attachments/vmfnote_7045%5b0%5d.pdf
+https://www.mitsuba-renderer.org/~wenzel/files/vmf.pdf
+
+===
 
 http://www.stat.pitt.edu/sungkyu/software/randvonMisesFisher3.pdf
 https://www.mitsuba-renderer.org/~wenzel/files/vmf.pdf

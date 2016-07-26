@@ -30,7 +30,7 @@ def _inertia_from_labels(X, centers, labels):
     n_examples, n_features = X.shape
     intertia = np.zeros((n_examples, ))
     for ee in range(n_examples):
-        intertia[ee] = np.dot(X[ee, :], centers[int(labels[ee]), :].T)
+        intertia[ee] = X[ee, :].dot(centers[int(labels[ee]), :].T)
 
     return 1 - np.sum(intertia)
 
@@ -46,33 +46,94 @@ def _labels_inertia(X, centers):
     for ee in range(n_examples):
         dists = np.zeros((n_clusters, ))
         for cc in range(n_clusters):
-            dists[cc] = np.dot(X[ee, :], centers[cc, :].T)
+            dists[cc] = X[ee, :].dot(centers[cc, :].T)
 
         labels[ee] = np.argmin(dists)
         intertia[ee] = dists(labels[ee])
 
     return labels, 1 - np.sum(intertia)
 
+
 def _vmf(X, kappa, mu):
-    # use the sparse dot provided by a csr_matrix
     n_examples, n_features = X.shape
-    #return _vmf_normalize(kappa, n_features) * np.exp(kappa * np.dot(mu, X.T))
-    print X.dot(mu.T).shape
-    return _vmf_normalize(kappa, n_features) * np.exp(kappa * X.dot(mu.T).T)
+    if sp.issparse(X):
+        return _vmf_normalize(kappa, n_features) * np.exp(kappa * X.dot(mu).T)
+    else:
+        return _vmf_normalize(kappa, n_features) * np.exp(kappa * np.dot(mu, X.T))
+
 
 def _vmf_normalize(kappa, dim):
     num = np.power(kappa, dim/2. - 1.)
 
-    denom = np.power(2. * np.pi, dim/2.)
     if dim/2. - 1. < 1e-15:
-        denom *= i0(kappa)
+        denom = np.power(2. * np.pi, dim/2.) * i0(kappa)
     else:
-        denom *= iv(kappa, dim/2. - 1.)
+        denom = np.power(2. * np.pi, dim/2.) * iv(dim/2. - 1., kappa)
 
-    if denom == 0:
+    if np.abs(denom) < 1e-15:
         raise ValueError("VMF scaling denominator was 0.")
 
     return num/denom
+
+
+def _log_bessel_i(nu, param):
+    # will not work when nu = 0 (i.e., dim = 2)
+    # https://github.com/mrouvier/movMF/blob/master/src/movmf.h
+    frac = 1. * param / nu
+    square = 1. + frac**2
+    root = np.sqrt(square)
+    eta = root + np.log(frac) - np.log(1 + root)
+    return -1. * np.log(np.sqrt(2 * np.pi * nu)) + nu * eta - 0.25 * np.log(square)
+
+
+def _vmf_log(X, kappa, mu):
+    n_examples, n_features = X.shape
+    # log(np.exp(kappa * X.dot(mu).T) * np.power(2. * np.pi, dim/2.) / [np.power(kappa, dim/2. - 1.)) * iv(dim/2. - 1., kappa) ]
+    # =
+    # kappa * X.dot(mu).T +
+    # (dim/2.) * (2. * np.pi) -
+    # log_iv(dim/2. - 1., kappa) -
+    # (dim/2. - 1.)*(kappa, dim/2. - 1.)
+    if np.isnan(_log_bessel_i(n_features / 2. - 1., kappa)):
+        print 'nan:', n_features / 2. - 1., kappa
+
+    #np.dot(mu, X.T)
+    #X.dot(mu)
+
+    log_vfm = kappa * X.dot(mu) +\
+            (n_features / 2. - 1.) * kappa +\
+            -(n_features / 2.) * (2. * np.pi) +\
+            -_log_bessel_i(n_features / 2. - 1., kappa)
+
+    return log_vfm
+
+
+def _vmf_approx(X, kappa, mu):
+    """Approximates vmf for numerical stability.
+    https://www.mitsuba-renderer.org/~wenzel/files/vmf.pdf
+    """
+    if np.abs(kappa) < 1e-10:
+        return 1. / (4 * np.pi)
+
+    n_examples, n_features = X.shape
+    if sp.issparse(X):
+        # gymnastics so that sparse/dense types work out
+        #x_dot_mu = np.zeros((n_examples, ))
+        #for ee in range(n_examples):
+        #    x_dot_mu[ee] = X[ee, :].dot(mu.T) #.data[0] if mu is sparse
+
+        num = kappa * np.exp(kappa * (X.dot(mu.T) - 1.0))
+
+    else:
+        # dense version
+        num = kappa * np.exp(kappa * (np.dot(mu, X.T) - 1.0))
+
+    denom = 2. * np.pi * (1. - np.exp(-2. * kappa))
+
+    if np.abs(denom) < 1e-15:
+        raise ValueError("VMF scaling denominator was 0.")
+
+    return num / denom
 
 
 def _update_params(X, posterior):
@@ -80,26 +141,37 @@ def _update_params(X, posterior):
     n_clusters, n_examples = posterior.shape
     weights = np.zeros((n_clusters,))
     concentrations = np.zeros((n_clusters,))
-
-    if sp.issparse(X):
-        centers = csr_matrix((n_clusters, n_features))
-    else:
-        centers = np.zeros((n_clusters, n_features)) # this needs to be sparse
+    centers = np.zeros((n_clusters, n_features))
 
     for cc in range(n_clusters):
         # update weights (alpha)
         weights[cc] = np.mean(posterior[cc, :])
 
+        # update centers (mu) original
+        #for ee in range(n_examples):
+        #    centers[cc, :] += 1. * X[ee, :] * posterior[cc, ee]
+
         # update centers (mu)
-        for ee in range(n_examples):
-            centers[cc, :] += 1. * X[ee, :] * posterior[cc, ee]
-
-        # precomputes
-        if sp.issparse(centers):
-            center_norm = sp.linalg.norm(centers[cc, :])
+        X_scaled = X.copy()
+        if sp.issparse(X):
+            # http://stackoverflow.com/questions/12237954/multiplying-elements-in-a-sparse-array-with-rows-in-matrix
+            X_scaled.data *= posterior[cc, :].repeat(np.diff(X_scaled.indptr))
         else:
-            center_norm = np.linalg.norm(centers[cc, :])
+            for ee in range(n_examples):
+                X_scaled[ee, :] *= posterior[cc, ee]
 
+        centers[cc, :] = X_scaled.sum(axis=0)
+
+        # precomput center norm
+        center_norm = np.linalg.norm(centers[cc, :])
+
+        # if it's zero, draw a random center with low weight
+        #if center_norm < 1e-10:
+        #    weights[cc] = 1
+        #    centers[cc, :] = np.random.randn(n_features)
+        #    center_norm = np.linalg.norm(centers[cc, :])
+
+        # precompute for kappa estimate
         rbar = center_norm / (n_examples * weights[cc])
 
         # normalize centers
@@ -108,6 +180,11 @@ def _update_params(X, posterior):
         # update concentration (kappa)
         concentrations[cc] = rbar * n_features - np.power(rbar, 3.)
         concentrations[cc] /= 1. - np.power(rbar, 2.)
+
+    weights = weights/np.sum(weights)
+
+    print 'weights', weights
+    print 'kappa', concentrations
 
     return centers, weights, concentrations
 
@@ -134,6 +211,11 @@ def _moVMF(X, n_clusters, posterior_type='soft', max_iter=300, verbose=False,
 
     n_examples, n_features = np.shape(X)
 
+    if n_features <= 2:
+        vmf_f = _vmf
+    else:
+        vmf_f = _vmf_log
+
     if verbose:
         print("Initialization complete")
 
@@ -144,24 +226,35 @@ def _moVMF(X, n_clusters, posterior_type='soft', max_iter=300, verbose=False,
 
         f = np.zeros((n_clusters, n_examples))
         for cc in range(n_clusters):
-            f[cc, :] = _vmf(X, concentrations[cc], centers[cc, :])
+            f[cc, :] = vmf_f(X, concentrations[cc], centers[cc, :])
 
         posterior = np.zeros((n_clusters, n_examples))
         if posterior_type == 'soft':
             posterior = np.tile(weights.T, (n_examples, 1)).T * f
+
+            # original
             for ee in range(n_examples):
                 posterior[:, ee] /= np.sum(posterior[:, ee])
+
+            # this seems faster
+            #col_sums = posterior.sum(axis=0)
+            #for ee in range(n_examples):
+            #    posterior[:, ee] /= col_sums[ee]
 
         elif posterior_type == 'hard':
             weighted_f = np.tile(weights.T, (n_examples, 1)).T * f
             for ee in range(n_examples):
                 posterior[np.argmax(weighted_f[:, ee]), ee] = 1.0
 
+                # dithering prevents alg from sticking to subset of clusters
+                #posterior += 0.0001 * np.abs(np.random.rand(*posterior.shape))
+
         # (maximization)
         centers, weights, concentrations = _update_params(X, posterior)
 
         # check convergence
         tolcheck = squared_norm(centers_prev - centers)
+        print tolcheck
         if tolcheck <= tol:
             if verbose:
                 print("Converged at iteration %d: "
