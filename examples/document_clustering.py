@@ -100,7 +100,7 @@ print("Silhouette Coefficient (cosine): %0.3f"
 
 print()
 
-
+"""
 ###############################################################################
 # Spherical K-Means clustering
 skm = SphericalKMeans(n_clusters=true_k, init='k-means++', n_init=20)
@@ -120,13 +120,13 @@ print("Silhouette Coefficient (cosine): %0.3f"
       % metrics.silhouette_score(X, skm.labels_, metric='cosine'))
 
 print()
-"""
+
 
 """
 ###############################################################################
 # Mixture of von Mises Fisher clustering (soft)
 vmf_soft = VonMisesFisherMixture(n_clusters=true_k, posterior_type='soft',
-    init='k-means++', n_init=1, verbose=True)
+    init='random-orthonormal', n_init=1, verbose=True, max_iter=4)
 
 print("Clustering with %s" % vmf_soft)
 vmf_soft.fit(X)
@@ -151,7 +151,7 @@ print()
 ###############################################################################
 # Mixture of von Mises Fisher clustering (hard)
 vmf_hard = VonMisesFisherMixture(n_clusters=true_k, posterior_type='hard',
-    init='k-means++', n_init=1, verbose=True, max_iter=3)
+    init='spherical-k-means', n_init=10, verbose=True, max_iter=10)
 
 print("Clustering with %s" % vmf_hard)
 vmf_hard.fit(X)

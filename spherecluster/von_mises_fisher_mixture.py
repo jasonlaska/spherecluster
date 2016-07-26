@@ -5,6 +5,7 @@ import scipy.sparse as sp
 from scipy.special import iv # modified bessel function of first kind
 from numpy import i0 # Modified Bessel function of the first kind, order 0, I_0
 from scipy.sparse import csr_matrix
+from scipy.misc import logsumexp
 
 from sklearn.base import BaseEstimator, ClusterMixin, TransformerMixin
 from sklearn.cluster.k_means_ import (
@@ -23,6 +24,8 @@ from sklearn.utils.extmath import squared_norm
 from sklearn.metrics.pairwise import cosine_distances
 from sklearn.externals.joblib import Parallel, delayed
 
+import spherical_kmeans
+
 
 def _inertia_from_labels(X, centers, labels):
     """Compute interia with cosine distance using known labels.
@@ -33,6 +36,7 @@ def _inertia_from_labels(X, centers, labels):
         intertia[ee] = X[ee, :].dot(centers[int(labels[ee]), :].T)
 
     return 1 - np.sum(intertia)
+
 
 def _labels_inertia(X, centers):
     """Compute labels and interia with cosine distance.
@@ -55,11 +59,12 @@ def _labels_inertia(X, centers):
 
 
 def _vmf(X, kappa, mu):
+    """Computs VMF using built in scipy Bessel approximations.
+    Good for small kappa, mu.
+    Returns log of VMF.
+    """
     n_examples, n_features = X.shape
-    if sp.issparse(X):
-        return _vmf_normalize(kappa, n_features) * np.exp(kappa * X.dot(mu).T)
-    else:
-        return _vmf_normalize(kappa, n_features) * np.exp(kappa * np.dot(mu, X.T))
+    return np.log(_vmf_normalize(kappa, n_features) * np.exp(kappa * X.dot(mu).T))
 
 
 def _vmf_normalize(kappa, dim):
@@ -77,63 +82,31 @@ def _vmf_normalize(kappa, dim):
 
 
 def _log_bessel_i(nu, param):
-    # will not work when nu = 0 (i.e., dim = 2)
-    # https://github.com/mrouvier/movMF/blob/master/src/movmf.h
+    # approximation to log(modified Bessel func of the first kind)
+    #
+    # This comes from here:
+    #   https://github.com/mrouvier/movMF/blob/master/src/movmf.h
+    #
+    # There's a host of good approximations for the log_bessel_i in
+    #   movMf.R via https://cran.r-project.org/web/packages/movMF/index.html
     frac = 1. * param / nu
     square = 1. + frac**2
     root = np.sqrt(square)
-    eta = root + np.log(frac) - np.log(1 + root)
-    return -1. * np.log(np.sqrt(2 * np.pi * nu)) + nu * eta - 0.25 * np.log(square)
+    eta = root + np.log(frac) - np.log(1. + root)
+    return -1. * np.log(np.sqrt(2. * np.pi * nu)) + nu * eta - 0.25 * np.log(square)
 
 
 def _vmf_log(X, kappa, mu):
-    n_examples, n_features = X.shape
-    # log(np.exp(kappa * X.dot(mu).T) * np.power(2. * np.pi, dim/2.) / [np.power(kappa, dim/2. - 1.)) * iv(dim/2. - 1., kappa) ]
+    # log(_vmf(kappa, mu))
     # =
-    # kappa * X.dot(mu).T +
-    # (dim/2.) * (2. * np.pi) -
-    # log_iv(dim/2. - 1., kappa) -
-    # (dim/2. - 1.)*(kappa, dim/2. - 1.)
-    if np.isnan(_log_bessel_i(n_features / 2. - 1., kappa)):
-        print 'nan:', n_features / 2. - 1., kappa
-
-    #np.dot(mu, X.T)
-    #X.dot(mu)
-
-    log_vfm = kappa * X.dot(mu) +\
-            (n_features / 2. - 1.) * kappa +\
-            -(n_features / 2.) * (2. * np.pi) +\
-            -_log_bessel_i(n_features / 2. - 1., kappa)
-
-    return log_vfm
-
-
-def _vmf_approx(X, kappa, mu):
-    """Approximates vmf for numerical stability.
-    https://www.mitsuba-renderer.org/~wenzel/files/vmf.pdf
-    """
-    if np.abs(kappa) < 1e-10:
-        return 1. / (4 * np.pi)
-
+    # (n_features / 2. - 1.) * kappa - (n_features / 2.) * (2. * np.pi)
+    # =
+    # (n_features / 2.) * (1 - kappa - 2 * np.pi)
     n_examples, n_features = X.shape
-    if sp.issparse(X):
-        # gymnastics so that sparse/dense types work out
-        #x_dot_mu = np.zeros((n_examples, ))
-        #for ee in range(n_examples):
-        #    x_dot_mu[ee] = X[ee, :].dot(mu.T) #.data[0] if mu is sparse
-
-        num = kappa * np.exp(kappa * (X.dot(mu.T) - 1.0))
-
-    else:
-        # dense version
-        num = kappa * np.exp(kappa * (np.dot(mu, X.T) - 1.0))
-
-    denom = 2. * np.pi * (1. - np.exp(-2. * kappa))
-
-    if np.abs(denom) < 1e-15:
-        raise ValueError("VMF scaling denominator was 0.")
-
-    return num / denom
+    log_vfm = kappa * X.dot(mu.T) +\
+            (n_features / 2) * (1 - kappa - 2 * np.pi) +\
+            -_log_bessel_i(n_features / 2 - 1, kappa)
+    return log_vfm
 
 
 def _update_params(X, posterior):
@@ -149,7 +122,7 @@ def _update_params(X, posterior):
 
         # update centers (mu) original
         #for ee in range(n_examples):
-        #    centers[cc, :] += 1. * X[ee, :] * posterior[cc, ee]
+        #    centers[cc, :] += X[ee, :] + posterior[cc, ee]
 
         # update centers (mu)
         X_scaled = X.copy()
@@ -165,12 +138,6 @@ def _update_params(X, posterior):
         # precomput center norm
         center_norm = np.linalg.norm(centers[cc, :])
 
-        # if it's zero, draw a random center with low weight
-        #if center_norm < 1e-10:
-        #    weights[cc] = 1
-        #    centers[cc, :] = np.random.randn(n_features)
-        #    center_norm = np.linalg.norm(centers[cc, :])
-
         # precompute for kappa estimate
         rbar = center_norm / (n_examples * weights[cc])
 
@@ -181,12 +148,50 @@ def _update_params(X, posterior):
         concentrations[cc] = rbar * n_features - np.power(rbar, 3.)
         concentrations[cc] /= 1. - np.power(rbar, 2.)
 
-    weights = weights/np.sum(weights)
-
     print 'weights', weights
     print 'kappa', concentrations
+    print 'centers', centers
 
     return centers, weights, concentrations
+
+
+def _init_unit_centers(X, n_clusters, random_state, init):
+    """Initializes unit norm centers.
+    init:  k-means++, spherical-k-means, random, random-orthonormal
+    """
+    n_examples, n_features = np.shape(X)
+    if init == 'spherical-k-means':
+        labels, inertia, centers, iters =\
+                spherical_kmeans._spherical_kmeans_single_lloyd(
+                    X,
+                    n_clusters,
+                    x_squared_norms=np.ones((n_examples, )),
+                    init='k-means++')
+
+        return centers
+
+    elif init == 'random':
+        centers = np.random.randn(n_clusters, n_features)
+        for cc in range(n_clusters):
+            centers[cc, :] = centers[cc, :] / np.linalg.norm(centers[cc, :])
+
+        return centers
+
+    elif init == 'k-means++':
+        centers = _init_centroids(X, n_clusters, 'k-means++',
+                                  random_state=random_state,
+                                  x_squared_norms=np.ones((n_examples, )))
+
+        for cc in range(n_clusters):
+            centers[cc, :] = centers[cc, :] / np.linalg.norm(centers[cc, :])
+
+        return centers
+
+    elif init == 'random-orthonormal':
+        centers = np.random.randn(n_clusters, n_features)
+        q, r = np.linalg.qr(centers.T, mode='reduced')
+
+        return q.T
 
 
 def _moVMF(X, n_clusters, posterior_type='soft', max_iter=300, verbose=False,
@@ -197,10 +202,10 @@ def _moVMF(X, n_clusters, posterior_type='soft', max_iter=300, verbose=False,
     "Clustering on the Unit Hypersphere using von Mises-Fisher Distributions"
     """
     random_state = check_random_state(random_state)
+    n_examples, n_features = np.shape(X)
 
     # init centers (mus)
-    centers = _init_centroids(X, n_clusters, init, random_state=random_state,
-                              x_squared_norms=np.ones(X.shape[0]))
+    centers = _init_unit_centers(X, n_clusters, random_state, init)
 
     # init weights (alphas)
     weights = np.ones((n_clusters,))
@@ -208,8 +213,6 @@ def _moVMF(X, n_clusters, posterior_type='soft', max_iter=300, verbose=False,
 
     # init concentrations (kappas)
     concentrations = np.ones((n_clusters,))
-
-    n_examples, n_features = np.shape(X)
 
     if n_features <= 2:
         vmf_f = _vmf
@@ -228,26 +231,25 @@ def _moVMF(X, n_clusters, posterior_type='soft', max_iter=300, verbose=False,
         for cc in range(n_clusters):
             f[cc, :] = vmf_f(X, concentrations[cc], centers[cc, :])
 
+        print 'f', f
+        print 'max f', np.max(f)
+
         posterior = np.zeros((n_clusters, n_examples))
         if posterior_type == 'soft':
-            posterior = np.tile(weights.T, (n_examples, 1)).T * f
-
-            # original
+            #posterior = np.tile(weights.T, (n_examples, 1)).T * f
+            weights_log = np.log(weights)
+            posterior = np.tile(weights_log.T, (n_examples, 1)).T + f
             for ee in range(n_examples):
-                posterior[:, ee] /= np.sum(posterior[:, ee])
+                posterior[:, ee] = np.exp(posterior[:, ee] - logsumexp(posterior[:, ee]))
 
-            # this seems faster
-            #col_sums = posterior.sum(axis=0)
-            #for ee in range(n_examples):
-            #    posterior[:, ee] /= col_sums[ee]
+            print 'posterior', posterior
 
         elif posterior_type == 'hard':
-            weighted_f = np.tile(weights.T, (n_examples, 1)).T * f
+            #weighted_f = np.tile(weights.T, (n_examples, 1)).T * f
+            weights_log = np.log(weights)
+            weighted_f = np.tile(weights_log.T, (n_examples, 1)).T + f
             for ee in range(n_examples):
                 posterior[np.argmax(weighted_f[:, ee]), ee] = 1.0
-
-                # dithering prevents alg from sticking to subset of clusters
-                #posterior += 0.0001 * np.abs(np.random.rand(*posterior.shape))
 
         # (maximization)
         centers, weights, concentrations = _update_params(X, posterior)
