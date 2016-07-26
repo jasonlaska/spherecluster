@@ -8,6 +8,7 @@ from sklearn.preprocessing import Normalizer
 from sklearn import metrics
 
 import numpy as np
+import scipy as sp
 
 import logging
 from sklearn.cluster import KMeans
@@ -28,7 +29,7 @@ logging.basicConfig(level=logging.INFO,
 
 ###############################################################################
 # Optional params
-use_LSA = True
+use_LSA = False
 n_components = 500
 
 ###############################################################################
@@ -62,7 +63,7 @@ X = vectorizer.fit_transform(dataset.data)
 print("n_samples: %d, n_features: %d" % X.shape)
 print()
 
-"""
+
 ###############################################################################
 # LSA for dimensionality reduction (and finding dense vectors)
 if use_LSA:
@@ -77,9 +78,8 @@ if use_LSA:
       int(explained_variance * 100)))
 
   print()
-"""
 
-"""
+
 ###############################################################################
 # K-Means clustering
 km = KMeans(n_clusters=true_k, init='k-means++', n_init=20)
@@ -100,7 +100,6 @@ print("Silhouette Coefficient (cosine): %0.3f"
 
 print()
 
-"""
 ###############################################################################
 # Spherical K-Means clustering
 skm = SphericalKMeans(n_clusters=true_k, init='k-means++', n_init=20)
@@ -122,11 +121,11 @@ print("Silhouette Coefficient (cosine): %0.3f"
 print()
 
 
-"""
+
 ###############################################################################
 # Mixture of von Mises Fisher clustering (soft)
 vmf_soft = VonMisesFisherMixture(n_clusters=true_k, posterior_type='soft',
-    init='random-orthonormal', n_init=1, verbose=True, max_iter=4)
+    init='k-means++', n_init=20, verbose=True)
 
 print("Clustering with %s" % vmf_soft)
 vmf_soft.fit(X)
@@ -145,13 +144,14 @@ print("Silhouette Coefficient (cosine): %0.3f"
       % metrics.silhouette_score(X, vmf_soft.labels_, metric='cosine'))
 
 print()
-"""
+
+
 
 
 ###############################################################################
 # Mixture of von Mises Fisher clustering (hard)
 vmf_hard = VonMisesFisherMixture(n_clusters=true_k, posterior_type='hard',
-    init='spherical-k-means', n_init=10, verbose=True, max_iter=10)
+    init='k-means++', n_init=20, verbose=True)
 
 print("Clustering with %s" % vmf_hard)
 vmf_hard.fit(X)

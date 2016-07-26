@@ -53,7 +53,7 @@ def _labels_inertia(X, centers):
             dists[cc] = X[ee, :].dot(centers[cc, :].T)
 
         labels[ee] = np.argmin(dists)
-        intertia[ee] = dists(labels[ee])
+        intertia[ee] = dists[int(labels[ee])]
 
     return labels, 1 - np.sum(intertia)
 
@@ -81,31 +81,51 @@ def _vmf_normalize(kappa, dim):
     return num/denom
 
 
-def _log_bessel_i(nu, param):
-    # approximation to log(modified Bessel func of the first kind)
-    #
-    # This comes from here:
-    #   https://github.com/mrouvier/movMF/blob/master/src/movmf.h
-    #
-    # There's a host of good approximations for the log_bessel_i in
-    #   movMf.R via https://cran.r-project.org/web/packages/movMF/index.html
-    frac = 1. * param / nu
-    square = 1. + frac**2
-    root = np.sqrt(square)
-    eta = root + np.log(frac) - np.log(1. + root)
-    return -1. * np.log(np.sqrt(2. * np.pi * nu)) + nu * eta - 0.25 * np.log(square)
+def _beta_SS(nu):
+    # from movMF in R, movMF.R
+    return np.sqrt((nu + 0.5)**2)
+
+
+def _log_H_asymptotic(nu, kappa):
+    # from movMF in R, movMF.R
+    # amos-type approximation / upperbound
+    # see "lH_asymptotic <-" in movMF.R
+    # we have that log(f(x|theta)) = theta' x - log(H_{d/2-1})(\|theta\|)
+    beta = _beta_SS(nu)
+    kappa_l = np.min([kappa, np.sqrt((3. * nu + 11. / 2.) * (nu + 3. / 2.))])
+    return _S(kappa, nu + 1/2, beta) +\
+            (_S(kappa_l, nu, nu + 2) -\
+            _S(kappa_l, nu + 0.5, beta))
+
+
+def _S(kappa, alpha, beta):
+    # from movMF, movMF.R
+    # see "S <-" in movMF.R
+    # antiderivative of amos-bound on G
+    # this is simplified a bit to work only on scalars
+    kappa = 1. * np.abs(kappa)
+    alpha = 1. * alpha
+    beta = 1. * np.abs(beta)
+    a_plus_b = alpha + beta
+    u = np.sqrt(kappa**2 + beta**2)
+    if alpha == 0:
+        alpha_scale = 0
+    else:
+        alpha_scale = alpha * np.log((alpha + u) / a_plus_b)
+
+    return u - beta - alpha_scale
 
 
 def _vmf_log(X, kappa, mu):
-    # log(_vmf(kappa, mu))
-    # =
-    # (n_features / 2. - 1.) * kappa - (n_features / 2.) * (2. * np.pi)
-    # =
-    # (n_features / 2.) * (1 - kappa - 2 * np.pi)
+    """Compute log(f(x|theta)) via Amos approximation
+
+        log(f(x|theta)) = theta' x - log(H_{d/2-1})(\|theta\|)
+
+    where theta = kappa * X, \|theta\| = kappa
+    """
     n_examples, n_features = X.shape
-    log_vfm = kappa * X.dot(mu.T) +\
-            (n_features / 2) * (1 - kappa - 2 * np.pi) +\
-            -_log_bessel_i(n_features / 2 - 1, kappa)
+    log_vfm = kappa * X.dot(mu).T +\
+            -_log_H_asymptotic(n_features / 2. - 1., kappa)
     return log_vfm
 
 
@@ -120,14 +140,9 @@ def _update_params(X, posterior):
         # update weights (alpha)
         weights[cc] = np.mean(posterior[cc, :])
 
-        # update centers (mu) original
-        #for ee in range(n_examples):
-        #    centers[cc, :] += X[ee, :] + posterior[cc, ee]
-
         # update centers (mu)
         X_scaled = X.copy()
         if sp.issparse(X):
-            # http://stackoverflow.com/questions/12237954/multiplying-elements-in-a-sparse-array-with-rows-in-matrix
             X_scaled.data *= posterior[cc, :].repeat(np.diff(X_scaled.indptr))
         else:
             for ee in range(n_examples):
@@ -147,10 +162,6 @@ def _update_params(X, posterior):
         # update concentration (kappa)
         concentrations[cc] = rbar * n_features - np.power(rbar, 3.)
         concentrations[cc] /= 1. - np.power(rbar, 2.)
-
-    print 'weights', weights
-    print 'kappa', concentrations
-    print 'centers', centers
 
     return centers, weights, concentrations
 
@@ -193,6 +204,17 @@ def _init_unit_centers(X, n_clusters, random_state, init):
 
         return q.T
 
+    elif init == 'random-class':
+        labels = np.random.randint(0, n_clusters, n_examples)
+        centers = np.zeros((n_clusters, n_features))
+        for cc in range(n_clusters):
+            centers[cc, :] = X[labels == cc, :].sum(axis=0)
+
+        for cc in range(n_clusters):
+            centers[cc, :] = centers[cc, :] / np.linalg.norm(centers[cc, :])
+
+        return centers
+
 
 def _moVMF(X, n_clusters, posterior_type='soft', max_iter=300, verbose=False,
                init='k-means++', random_state=None, tol=1e-6):
@@ -214,7 +236,7 @@ def _moVMF(X, n_clusters, posterior_type='soft', max_iter=300, verbose=False,
     # init concentrations (kappas)
     concentrations = np.ones((n_clusters,))
 
-    if n_features <= 2:
+    if n_features <= 50:  # works up to about 50 before numrically unstable
         vmf_f = _vmf
     else:
         vmf_f = _vmf_log
@@ -227,36 +249,29 @@ def _moVMF(X, n_clusters, posterior_type='soft', max_iter=300, verbose=False,
 
         # (expectation)
 
-        f = np.zeros((n_clusters, n_examples))
+        f_log = np.zeros((n_clusters, n_examples))
         for cc in range(n_clusters):
-            f[cc, :] = vmf_f(X, concentrations[cc], centers[cc, :])
-
-        print 'f', f
-        print 'max f', np.max(f)
+            f_log[cc, :] = vmf_f(X, concentrations[cc], centers[cc, :])
 
         posterior = np.zeros((n_clusters, n_examples))
         if posterior_type == 'soft':
-            #posterior = np.tile(weights.T, (n_examples, 1)).T * f
             weights_log = np.log(weights)
-            posterior = np.tile(weights_log.T, (n_examples, 1)).T + f
+            posterior = np.tile(weights_log.T, (n_examples, 1)).T + f_log
             for ee in range(n_examples):
-                posterior[:, ee] = np.exp(posterior[:, ee] - logsumexp(posterior[:, ee]))
-
-            print 'posterior', posterior
+                posterior[:, ee] = np.exp(
+                        posterior[:, ee] - logsumexp(posterior[:, ee]))
 
         elif posterior_type == 'hard':
-            #weighted_f = np.tile(weights.T, (n_examples, 1)).T * f
             weights_log = np.log(weights)
-            weighted_f = np.tile(weights_log.T, (n_examples, 1)).T + f
+            weighted_f_log = np.tile(weights_log.T, (n_examples, 1)).T + f_log
             for ee in range(n_examples):
-                posterior[np.argmax(weighted_f[:, ee]), ee] = 1.0
+                posterior[np.argmax(weighted_f_log[:, ee]), ee] = 1.0
 
         # (maximization)
         centers, weights, concentrations = _update_params(X, posterior)
 
         # check convergence
         tolcheck = squared_norm(centers_prev - centers)
-        print tolcheck
         if tolcheck <= tol:
             if verbose:
                 print("Converged at iteration %d: "
@@ -275,7 +290,7 @@ def _moVMF(X, n_clusters, posterior_type='soft', max_iter=300, verbose=False,
 
 
 def moVMF(X, n_clusters, posterior_type='soft', n_init=10, n_jobs=1,
-            max_iter=300, verbose=False, init='k-means++', random_state=None,
+            max_iter=300, verbose=False, init='random-orthonormal', random_state=None,
             tol=1e-6, copy_x=True):
     """
     """
@@ -357,7 +372,7 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
     """
     """
     def __init__(self, n_clusters, posterior_type='soft', n_init=10, n_jobs=1,
-            max_iter=300, verbose=False, init='k-means++', random_state=None,
+            max_iter=300, verbose=False, init='random-orthonormal', random_state=None,
             tol=1e-6, copy_x=True):
         self.n_clusters = n_clusters
         self.posterior_type = posterior_type
@@ -417,6 +432,9 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
                 n_init=self.n_init, n_jobs=self.n_jobs, max_iter=self.max_iter,
                 verbose=self.verbose, init=self.init,
                 random_state=random_state, tol=self.tol, copy_x=self.copy_x)
+
+        print self.weights_
+        print self.concentrations_
 
         return self
 
