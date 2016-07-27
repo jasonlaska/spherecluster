@@ -2,8 +2,8 @@ import warnings
 
 import numpy as np
 import scipy.sparse as sp
-from scipy.special import iv # modified bessel function of first kind
-from numpy import i0 # Modified Bessel function of the first kind, order 0, I_0
+from scipy.special import iv # modified Bessel function of first kind, I_v
+from numpy import i0 # modified Bessel function of first kind order 0, I_0
 from scipy.misc import logsumexp
 
 from sklearn.base import BaseEstimator, ClusterMixin, TransformerMixin
@@ -254,13 +254,17 @@ def _expectation(X, centers, weights, concentrations, posterior_type='soft'):
     return posterior
 
 
-def _maximization(X, posterior, weights=None):
+def _maximization(X, posterior, force_weights=None):
     """Estimate new centers, weights, and concentrations from
 
     Parameters
     ----------
     posterior : array, [n_centers, n_examples]
         The posterior matrix from the expectation step.
+
+    force_weights : None or array, [n_centers, ]
+        If None is passed, will estimate weights.
+        If an array is passed, will use instead of estimating.
 
     Returns
     ----------
@@ -272,13 +276,15 @@ def _maximization(X, posterior, weights=None):
     n_clusters, n_examples = posterior.shape
     concentrations = np.zeros((n_clusters,))
     centers = np.zeros((n_clusters, n_features))
-    if weights is None:
+    if force_weights is None:
         weights = np.zeros((n_clusters,))
 
     for cc in range(n_clusters):
         # update weights (alpha)
-        if weights is None:
+        if force_weights is None:
             weights[cc] = np.mean(posterior[cc, :])
+        else:
+            weights = force_weights
 
         # update centers (mu)
         X_scaled = X.copy()
@@ -414,7 +420,7 @@ def _movMF(X, n_clusters, posterior_type='soft', force_weights=None,
         centers, weights, concentrations = _maximization(
                 X,
                 posterior,
-                weights=force_weights)
+                force_weights=force_weights)
 
         # check convergence
         tolcheck = squared_norm(centers_prev - centers)
@@ -649,6 +655,9 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
 
 
     def _check_force_weights(self):
+        if self.force_weights is None:
+            return
+
         if len(self.force_weights) != self.n_clusters:
             raise ValueError(("len(force_weights)={} but must equal "
                                 "n_clusters={}".format(
