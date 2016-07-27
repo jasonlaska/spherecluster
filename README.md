@@ -2,19 +2,20 @@
 Clustering routines for the unit sphere.
 
 ## Algorithms
-This package implements the three algorithms outlined in ["Clustering on the Unit Hypersphere using von Mises-Fisher Distributions"](http://www.jmlr.org/papers/volume6/banerjee05a/banerjee05a.pdf) by Banerjee et al. JMLR 2005.
+This package implements the three algorithms outlined in ["Clustering on the Unit Hypersphere using von Mises-Fisher Distributions"](http://www.jmlr.org/papers/volume6/banerjee05a/banerjee05a.pdf), Banerjee et al., JMLR 2005.
 
 1. Spherical K-means
 Spherical K-means differs from conventional K-means in that it projects the estimatoed cluster centroids on the the unit sphere at the end of each maximization step (i.e., normalizes the centroids).
 
 2. Mixtures of von Mises Fisher distributions (movMF)
-The [von Mises Fisher distribution](https://en.wikipedia.org/wiki/Von_Mises%E2%80%93Fisher_distribution) is commonly used in directional statistics.  Much like the Gaussian distribution has a mean and variance, the von Mises Fisher distribution has a mean direction $\mu$ and a concentration paramater $\kappa$, however, all points are on the unit hypersphere.
 
-If we model our data as a [mixture](https://en.wikipedia.org/wiki/Mixture_model) of von Mises Fisher Distributions, we have an additional `weight` parameter for each distribution in the mixture, and can cluster our data accordingly.
+    The [von Mises Fisher distribution](https://en.wikipedia.org/wiki/Von_Mises%E2%80%93Fisher_distribution) is commonly used in directional statistics.  Much like the Gaussian distribution has a mean and variance, the von Mises Fisher distribution has a mean direction $\mu$ and a concentration paramater $\kappa$, however, all points are on the unit hypersphere.
 
-- soft-movMF: Estimates the posterior on each example for each class.
+    If we model our data as a [mixture](https://en.wikipedia.org/wiki/Mixture_model) of von Mises Fisher Distributions, we have an additional `weight` parameter for each distribution in the mixture, and can cluster our data accordingly.
 
-- hard-movMF: Sets the posterior on each example to be 1 for a single class and 0 for all others by selecting the location of the max value in the estimator soft posterior.
+    - soft-movMF: Estimates the posterior on each example for each class.
+
+    - hard-movMF: Sets the posterior on each example to be 1 for a single class and 0 for all others by selecting the location of the max value in the estimator soft posterior.
 
 
 ## Other goodies
