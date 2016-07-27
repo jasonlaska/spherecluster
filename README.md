@@ -11,7 +11,7 @@ This package implements the three algorithms outlined in ["Clustering on the Uni
 
 2. Mixtures of von Mises Fisher distributions (movMF)
 
-    Much like the Gaussian distribution is parameterized by mean and variance, the [von Mises Fisher distribution](https://en.wikipedia.org/wiki/Von_Mises%E2%80%93Fisher_distribution) has a mean direction $\mu$ and a concentration parameter $\kappa$. Points drawn from the vMF distribution have unit norm and thus live on surface of the unit hypersphere.
+    Much like the Gaussian distribution is parameterized by mean and variance, the [von Mises Fisher distribution](https://en.wikipedia.org/wiki/Von_Mises%E2%80%93Fisher_distribution) has a mean direction `$\mu$` and a concentration parameter `$\kappa$`. Points drawn from the vMF distribution live on surface of the unit hypersphere `$\S^{N-1}$` (i.e., each point `$x_i$` s.t. `$\|x_i\|_2 = 1$`).
 
     If we model our data as a [mixture](https://en.wikipedia.org/wiki/Mixture_model) of von Mises Fisher Distributions, we have an additional `weight` parameter for each distribution in the mixture, and can cluster our data accordingly.
 
@@ -116,6 +116,7 @@ Spherical k-means, which is a simple low-cost modification to the standard k-mea
 
         Find more at:
         [https://cran.r-project.org/web/packages/movMF/index.html](https://cran.r-project.org/web/packages/movMF/index.html)
+        [Additional references on approximations](https://cran.r-project.org/web/packages/movMF/movMF.pdf)
 
 
 ## Other implementations

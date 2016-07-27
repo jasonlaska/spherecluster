@@ -1,31 +1,19 @@
+'''
+Generate multivariate von Mises Fisher samples via a
+rejection sampling scheme from
+    "Directional Statistics" (Mardia and Jupp, 1999)
+
+This solution originally appears here:
+http://stats.stackexchange.com/questions/156729/sampling-from-von-mises-fisher-distribution-in-python
+
+
+References:
+
+Sampling from vMF on S^2:
+    https://www.mitsuba-renderer.org/~wenzel/files/vmf.pdf
+    http://www.stat.pitt.edu/sungkyu/software/randvonMisesFisher3.pdf
+'''
 import numpy as np
-
-'''
-Generate multivariate von Mises Fisher samples.
-
-Code here reformatted from solution here:
-http://stats.stackexchange.com/questions/156729/sampling-from-von-mises-fisher-distribution-in-python
-
-Rejection sample scheme from
- "Directional Statistics" (Mardia and Jupp, 1999)
-
-http://math.stackexchange.com/questions/1326492/sampling-from-the-von-mises-fisher-distribution
-http://www.mitsuba-renderer.org/~wenzel/files/vmf.pdf
-
-# good stuff here:
-https://cran.r-project.org/web/packages/movMF/vignettes/movMF.pdf
-https://en.wikipedia.org/wiki/Von_Mises%E2%80%93Fisher_distribution
-http://www.kyb.mpg.de/fileadmin/user_upload/files/publications/attachments/vmfnote_7045%5b0%5d.pdf
-https://www.mitsuba-renderer.org/~wenzel/files/vmf.pdf
-https://arxiv.org/pdf/1605.00316.pdf # log EM-algorithm
-https://cran.r-project.org/web/packages/movMF/citation.html
-
-===
-
-http://www.stat.pitt.edu/sungkyu/software/randvonMisesFisher3.pdf
-https://www.mitsuba-renderer.org/~wenzel/files/vmf.pdf
-http://stats.stackexchange.com/questions/156729/sampling-from-von-mises-fisher-distribution-in-python
-'''
 
 
 def weight_rejection_sampling(kappa, dim, num_samples):
@@ -73,13 +61,6 @@ def vMF(mu, kappa, num_samples):
 
         # compute new point
         new_point = v * np.sqrt(1 - ws[nn]**2) + ws[nn] * mu
-
-        # assert some requirements of data
-        np.testing.assert_almost_equal(np.dot(v, mu), 0.0)
-        #np.testing.assert_almost_equal(
-        #    np.linalg.norm(new_point),
-        #    1.0,
-        #    decimal=4)
 
         # collect result
         result[nn, :] = new_point
