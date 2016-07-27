@@ -1,5 +1,4 @@
 # Clustering on the unit hypersphere in scikit-learn
-Clustering routines for the unit sphere.
 
 <img src="images/sphere_w_clusters.png" alt="Mixture of von Mises Fisher" width="400">
 
