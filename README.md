@@ -96,7 +96,7 @@ We also reproduce [this scikit-learn k-means demo](http://scikit-learn.org/stabl
 
 <img src="images/document_clustering.png" alt="Document clustering" width="800">
 
-Spherical k-means, which is a simple modification to the standard k-means algorithm performs quite well and should be considered for these kidns of problens.
+Spherical k-means, which is a simple modification to the standard k-means algorithm performs quite well and should be considered for these kidns of problems.
 
 # Acknowledgments
 
