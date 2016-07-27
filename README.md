@@ -81,22 +81,22 @@ Other notes:
 # Examples
 
 ## Small mix
-We reproduce the "small mix" 2D example from [Section 6.3](http://www.jmlr.org/papers/volume6/banerjee05a/banerjee05a.pdf) in `examples/small_mix.py`.  We've adjusted the parameters such that one distribution in the mixture has much lower concentration than the other to distinguish between movMF performance and (spherical) k-means which do not estimate weight or concentration parameters.  We also provide a 3D version of this example in `examples/small_mix_3d.py` for fun.
+We reproduce the "small mix" example from [Section 6.3](http://www.jmlr.org/papers/volume6/banerjee05a/banerjee05a.pdf) in `examples/small_mix.py`.  We've adjusted the parameters such that one distribution in the mixture has much lower concentration than the other to distinguish between movMF performance and (spherical) k-means which do not estimate weight or concentration parameters.  We also provide a 3D version of this example in `examples/small_mix_3d.py` for fun.
 
-Running these scripts will spit out some additional metrics.
+Running these scripts will spit out some additional performance metrics for each algorithm.
 
 <img src="images/small_mix_2d.png" alt="Small mix 2d" width="500">
 <img src="images/small_mix_3d.png" alt="Small mix 3d" width="500">
 
-It is clear from the figures that the movMF algorithms do a better job at taking advantage of the concentration estimate.
+It is clear from the figures that the movMF algorithms do a better job by taking advantage of the concentration estimate.
 
 
 ## Document clustering
-We also reproduce [this scikit-learn k-means demo](http://scikit-learn.org/stable/auto_examples/text/document_clustering.html) in `examples/document_clustering.py`.  The results are different on each run but here's a chart comparing the algorithms' performances for a sample run:
+We also reproduce [this scikit-learn k-means demo](http://scikit-learn.org/stable/auto_examples/text/document_clustering.html) in `examples/document_clustering.py`.  The results are different on each run, here's a chart comparing the algorithms' performances for a sample run:
 
 <img src="images/document_clustering.png" alt="Document clustering" width="800">
 
-Spherical k-means, which is a simple modification to the standard k-means algorithm performs quite well and should be considered for these kidns of problems.
+Spherical k-means, which is a simple low-cost modification to the standard k-means algorithm performs quite well on this example.
 
 # Acknowledgments
 
