@@ -19,8 +19,8 @@ http://www.jmlr.org/papers/volume6/banerjee05a/banerjee05a.pdf
 
 ## Small mix
 
-<img src="images/small_mix_2d.png" alt="Small mix 2d" width="800">
-<img src="images/small_mix_3d.png" alt="Small mix 3d" width="800">
+<img src="images/small_mix_2d.png" alt="Small mix 2d" width="500">
+<img src="images/small_mix_3d.png" alt="Small mix 3d" width="500">
 
 
 ## Document clustering
