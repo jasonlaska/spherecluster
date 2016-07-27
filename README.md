@@ -1,7 +1,7 @@
 # Clustering on the unit hypersphere in scikit-learn
 Clustering routines for the unit sphere.
 
-<p style="text-align:center;"><img src="images/sphere_w_clusters.png" alt="Mixture of von Mises Fisher" width="500"></p>
+<img src="images/sphere_w_clusters.png" alt="Mixture of von Mises Fisher" width="400">
 
 ## Algorithms
 This package implements the three algorithms outlined in ["Clustering on the Unit Hypersphere using von Mises-Fisher Distributions"](http://www.jmlr.org/papers/volume6/banerjee05a/banerjee05a.pdf), Banerjee et al., JMLR 2005.
