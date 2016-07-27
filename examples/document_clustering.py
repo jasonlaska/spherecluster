@@ -98,7 +98,6 @@ table.append([
     metrics.v_measure_score(labels, km.labels_),
     metrics.adjusted_rand_score(labels, km.labels_),
     metrics.adjusted_mutual_info_score(labels, km.labels_),
-    metrics.silhouette_score(X, km.labels_, metric='euclidean'),
     metrics.silhouette_score(X, km.labels_, metric='cosine')])
 
 print("Homogeneity: %0.3f" % metrics.homogeneity_score(labels, km.labels_))
@@ -140,20 +139,19 @@ print("Silhouette Coefficient (cosine): %0.3f"
 print()
 
 table.append([
-    'sperical k-means',
+    'spherical k-means',
     metrics.homogeneity_score(labels, skm.labels_),
     metrics.completeness_score(labels, skm.labels_),
     metrics.v_measure_score(labels, skm.labels_),
     metrics.adjusted_rand_score(labels, skm.labels_),
     metrics.adjusted_mutual_info_score(labels, skm.labels_),
-    metrics.silhouette_score(X, skm.labels_, metric='euclidean'),
     metrics.silhouette_score(X, skm.labels_, metric='cosine')])
 
 
 ###############################################################################
 # Mixture of von Mises Fisher clustering (soft)
 vmf_soft = VonMisesFisherMixture(n_clusters=true_k, posterior_type='soft',
-    init='random-orthonormal', n_init=20, force_weights=np.ones((true_k,))/true_k)
+    init='random-class', n_init=20, force_weights=np.ones((true_k,))/true_k)
 
 print("Clustering with %s" % vmf_soft)
 vmf_soft.fit(X)
@@ -182,14 +180,13 @@ table.append([
     metrics.v_measure_score(labels, vmf_soft.labels_),
     metrics.adjusted_rand_score(labels, vmf_soft.labels_),
     metrics.adjusted_mutual_info_score(labels, vmf_soft.labels_),
-    metrics.silhouette_score(X, vmf_soft.labels_, metric='euclidean'),
     metrics.silhouette_score(X, vmf_soft.labels_, metric='cosine')])
 
 
 ###############################################################################
 # Mixture of von Mises Fisher clustering (hard)
 vmf_hard = VonMisesFisherMixture(n_clusters=true_k, posterior_type='hard',
-    init='random-orthonormal', n_init=20, force_weights=np.ones((true_k,))/true_k)
+    init='random-class', n_init=20, force_weights=np.ones((true_k,))/true_k)
 
 print("Clustering with %s" % vmf_hard)
 vmf_hard.fit(X)
@@ -218,7 +215,6 @@ table.append([
     metrics.v_measure_score(labels, vmf_hard.labels_),
     metrics.adjusted_rand_score(labels, vmf_hard.labels_),
     metrics.adjusted_mutual_info_score(labels, vmf_hard.labels_),
-    metrics.silhouette_score(X, vmf_hard.labels_, metric='euclidean'),
     metrics.silhouette_score(X, vmf_hard.labels_, metric='cosine')])
 
 
@@ -230,7 +226,6 @@ headers = [
     'V-Measure',
     'Adj Rand',
     'Adj MI',
-    'Silhouette (euc)',
     'Silhouette (cos)']
 print(tabulate(table, headers, tablefmt="fancy_grid"))
 

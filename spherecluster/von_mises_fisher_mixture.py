@@ -309,7 +309,7 @@ def _maximization(X, posterior, force_weights=None):
 
 
 def _movMF(X, n_clusters, posterior_type='soft', force_weights=None,
-            max_iter=300, verbose=False, init='random-orthonormal',
+            max_iter=300, verbose=False, init='random-class',
             random_state=None, tol=1e-6):
     """Mixture of von Mises Fisher clustering.
 
@@ -357,6 +357,7 @@ def _movMF(X, n_clusters, posterior_type='soft', force_weights=None,
         n_init consecutive runs in terms of inertia.
 
     init:  (string) one of
+        random-class [default]: random class assignment and centroid computation
         k-means++ : uses sklearn k-means++ initialization algorithm
         spherical-k-means : use centroids from one pass of spherical k-means
         random : random unit norm vectors
@@ -444,7 +445,7 @@ def _movMF(X, n_clusters, posterior_type='soft', force_weights=None,
 
 
 def movMF(X, n_clusters, posterior_type='soft', force_weights=None, n_init=10,
-            n_jobs=1, max_iter=300, verbose=False, init='random-orthonormal',
+            n_jobs=1, max_iter=300, verbose=False, init='random-class',
             random_state=None, tol=1e-6, copy_x=True):
     """Wrapper for parallelization of _movMF and running n_init times.
     """
@@ -573,6 +574,7 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
         n_init consecutive runs in terms of inertia.
 
     init:  (string) one of
+        random-class [default]: random class assignment and centroid computation
         k-means++ : uses sklearn k-means++ initialization algorithm
         spherical-k-means : use centroids from one pass of spherical k-means
         random : random unit norm vectors
@@ -634,7 +636,7 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
     """
     def __init__(self, n_clusters, posterior_type='soft', force_weights=None,
             n_init=10, n_jobs=1, max_iter=300, verbose=False,
-            init='random-orthonormal', random_state=None, tol=1e-6, copy_x=True):
+            init='random-class', random_state=None, tol=1e-6, copy_x=True):
         self.n_clusters = n_clusters
         self.posterior_type = posterior_type
         self.force_weights = force_weights
