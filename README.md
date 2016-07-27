@@ -15,11 +15,11 @@ This package implements the three algorithms outlined in ["Clustering on the Uni
 
     If we model our data as a [mixture](https://en.wikipedia.org/wiki/Mixture_model) of von Mises Fisher Distributions, we have an additional `weight` parameter for each distribution in the mixture, and can cluster our data accordingly.
 
-    - soft-movMF:
+    - soft-movMF
 
         Estimates the posterior on each example for each class.
 
-    - hard-movMF:
+    - hard-movMF
 
         Sets the posterior on each example to be 1 for a single class and 0 for all others by selecting the location of the max value in the estimator soft posterior.
 
@@ -85,9 +85,29 @@ Other notes of interest:
 <img src="images/document_clustering.png" alt="Document clustering" width="800">
 
 
-# Acknowledgments / Attribution
+# Acknowledgments
+
+- Primary reference on algorithms: ["Clustering on the Unit Hypersphere using von Mises-Fisher Distributions"](http://www.jmlr.org/papers/volume6/banerjee05a/banerjee05a.pdf)
+
+- Related references:
+
+    - ["movMF: An R Package for Fitting Mixtures of von Mises-Fisher Distributions"](https://cran.r-project.org/web/packages/movMF/vignettes/movMF.pdf), K. Hornik and B.  Grün, Journal of Statistical Software, 2014.
+
+    - ["Directional statistics in machine learning: a brief review"](https://arxiv.org/pdf/1605.00316.pdf), S. Sra, Arxiv, May 2016.
+
+    - ["A short note on parameter approximation for von Mises-Fisher distributions"](http://www.kyb.mpg.de/fileadmin/user_upload/files/publications/attachments/vmfnote_7045%5b0%5d.pdf)
+
+- For large values of $\eta$ and $\kappa$ we compute the log-vMF density via approximations found in
+
+    ["movMF: An R Package for Fitting Mixtures of von Mises-Fisher Distributions"](https://cran.r-project.org/web/packages/movMF/vignettes/movMF.pdf), K. Hornik and B.  Grün, Journal of Statistical Software, 2014.
+
+    Find more at:
+    ["https://cran.r-project.org/web/packages/movMF/index.html"](https://cran.r-project.org/web/packages/movMF/index.html)
 
 
 # Other implementations
-http://nipy.sourceforge.net/nipy/devel/api/generated/nipy.algorithms.clustering.von_mises_fisher_mixture.html
-https://github.com/nipy/nipy/blob/master/nipy/algorithms/clustering/von_mises_fisher_mixture.py
+- ["movMF in R"](https://cran.r-project.org/web/packages/movMF/index.html)
+
+- ["Mixture of von Mises Fisher clustering in 3 dimensions (part of NIPY)"](http://nipy.sourceforge.net/nipy/devel/api/generated/nipy.algorithms.clustering.von_mises_fisher_mixture.html)
+
+
