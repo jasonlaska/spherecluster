@@ -83,7 +83,7 @@ def _vmf_normalize(kappa, dim):
     if np.abs(denom) < 1e-15:
         raise ValueError("VMF scaling denominator was 0.")
 
-    return num/denom
+    return num / denom
 
 
 def _beta_SS(nu):
@@ -314,7 +314,6 @@ def _movMF(X, n_clusters, posterior_type='soft', max_iter=300, verbose=False,
 
     Attribution
     ----------
-
     Approximation of log-vmf distribution function from movMF R-package.
     Find more at:
       https://cran.r-project.org/web/packages/movMF/vignettes/movMF.pdf
@@ -322,7 +321,6 @@ def _movMF(X, n_clusters, posterior_type='soft', max_iter=300, verbose=False,
 
     Parameters
     ----------
-
     n_clusters : int, optional, default: 8
         The number of clusters to form as well as the number of
         centroids to generate.
@@ -512,7 +510,6 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
 
     Attribution
     ----------
-
     Approximation of log-vmf distribution function from movMF R-package.
     Find more at:
       https://cran.r-project.org/web/packages/movMF/vignettes/movMF.pdf
@@ -522,7 +519,6 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
 
     Parameters
     ----------
-
     n_clusters : int, optional, default: 8
         The number of clusters to form as well as the number of
         centroids to generate.

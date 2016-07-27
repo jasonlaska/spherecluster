@@ -27,10 +27,7 @@ def _spherical_kmeans_single_lloyd(X, n_clusters, max_iter=300,
                                    random_state=None, tol=1e-4,
                                    precompute_distances=True):
     '''
-    Modified from sklearn.cluster.k_means_.k_means_single_lloyd
-
-    Changes from original:
-        - normalizes cluster centers in each iteration
+    Modified from sklearn.cluster.k_means_.k_means_single_lloyd.
     '''
     random_state = check_random_state(random_state)
 
@@ -99,12 +96,7 @@ def _spherical_kmeans_single_lloyd(X, n_clusters, max_iter=300,
 def spherical_k_means(X, n_clusters, init='k-means++', n_init=10,
             max_iter=300, verbose=False, tol=1e-4, random_state=None,
             copy_x=True, n_jobs=1, algorithm="auto", return_n_iter=False):
-    """
-    Modified from sklearn.cluster.k_means_.k_means
-
-    Changes from original:
-        - does not subtract (and re-apply) mean of data
-        - only supports algorithm: _spherical_kmeans_single_lloyd
+    """Modified from sklearn.cluster.k_means_.k_means.
     """
     if n_init <= 0:
         raise ValueError("Invalid number of initializations."
