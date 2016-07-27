@@ -14,7 +14,7 @@ Clustering on the Unit Hypersphere using von Mises-Fisher Distributions
 http://www.jmlr.org/papers/volume6/banerjee05a/banerjee05a.pdf
 
 # Usage
-The tools in this package are sklearn estimators and mirror the interface and parameter names for `sklearn.cluster.kmeans`.
+Both `SphericalKMeans` and `VonMisesFisherMixture` are standard sklearn estimators and mirror the parameter names for `sklearn.cluster.kmeans`.
 
     # Find K clusters from data matrix X (n_examples x n_features)
 
@@ -25,6 +25,7 @@ The tools in this package are sklearn estimators and mirror the interface and pa
 
     # skm.cluster_centers_
     # skm.labels_
+    # skm.intertia_
 
     # movMF-soft
     from spherecluster import VonMisesFisherMixture
@@ -35,6 +36,7 @@ The tools in this package are sklearn estimators and mirror the interface and pa
     # vmf_soft.labels_
     # vmf_soft.weights_
     # vmf_soft.concentrations_
+    # vmf_soft.intertia_
 
     # movMF-hard
     from spherecluster import VonMisesFisherMixture
@@ -45,6 +47,14 @@ The tools in this package are sklearn estimators and mirror the interface and pa
     # vmf_hard.labels_
     # vmf_hard.weights_
     # vmf_hard.concentrations_
+    # vmf_hard.intertia_
+
+Other notes of interest:
+
+- `SphericalKMeans` closely follows the `sklearn.cluster.kmeans` implementation so they should be generally interchangeable (its a small modification)
+- X can be a standard dense `numpy.array` or a sparse `scipy.sparse.csr_matrix`
+- This has been tested with sparse documents as large as `n_features = 43256` (see document clustering example) but may encounter numerical instability when `n_features` is very large
+- `cluster_centers_` in `VonMisesFisherMixture` are currently dense
 
 # Examples
 
