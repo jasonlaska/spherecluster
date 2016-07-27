@@ -254,7 +254,7 @@ def _expectation(X, centers, weights, concentrations, posterior_type='soft'):
     return posterior
 
 
-def _maximization(X, posterior):
+def _maximization(X, posterior, weights=None):
     """Estimate new centers, weights, and concentrations from
 
     Parameters
@@ -270,13 +270,15 @@ def _maximization(X, posterior):
     """
     n_examples, n_features = X.shape
     n_clusters, n_examples = posterior.shape
-    weights = np.zeros((n_clusters,))
     concentrations = np.zeros((n_clusters,))
     centers = np.zeros((n_clusters, n_features))
+    if weights is None:
+        weights = np.zeros((n_clusters,))
 
     for cc in range(n_clusters):
         # update weights (alpha)
-        weights[cc] = np.mean(posterior[cc, :])
+        if weights is None:
+            weights[cc] = np.mean(posterior[cc, :])
 
         # update centers (mu)
         X_scaled = X.copy()
@@ -300,8 +302,9 @@ def _maximization(X, posterior):
     return centers, weights, concentrations
 
 
-def _movMF(X, n_clusters, posterior_type='soft', max_iter=300, verbose=False,
-               init='random-orthonormal', random_state=None, tol=1e-6):
+def _movMF(X, n_clusters, posterior_type='soft', force_weights=None,
+            max_iter=300, verbose=False, init='random-orthonormal',
+            random_state=None, tol=1e-6):
     """Mixture of von Mises Fisher clustering.
 
     Implements the algorithms (i) and (ii) from
@@ -315,6 +318,10 @@ def _movMF(X, n_clusters, posterior_type='soft', max_iter=300, verbose=False,
     Attribution
     ----------
     Approximation of log-vmf distribution function from movMF R-package.
+
+    "movMF: An R Package for Fitting Mixtures of von Mises-Fisher Distributions"
+    by Kurt Hornik, Bettina Grun, 2014
+
     Find more at:
       https://cran.r-project.org/web/packages/movMF/vignettes/movMF.pdf
       https://cran.r-project.org/web/packages/movMF/index.html
@@ -328,6 +335,11 @@ def _movMF(X, n_clusters, posterior_type='soft', max_iter=300, verbose=False,
     posterior_type: 'soft' or 'hard'
         Type of posterior computed in exepectation step.
         See note about attribute: self.posterior_
+
+    force_weights : None or array [n_clusters, ]
+        If None, the algorithm will estimate the weights.
+        If an array of weights, algorithm will estimate concentrations and
+        centers with given weights.
 
     max_iter : int, default: 300
         Maximum number of iterations of the k-means algorithm for a
@@ -377,8 +389,9 @@ def _movMF(X, n_clusters, posterior_type='soft', max_iter=300, verbose=False,
     centers = _init_unit_centers(X, n_clusters, random_state, init)
 
     # init weights (alphas)
-    weights = np.ones((n_clusters,))
-    weights = weights / np.sum(weights)
+    if force_weights is None:
+        weights = np.ones((n_clusters,))
+        weights = weights / np.sum(weights)
 
     # init concentrations (kappas)
     concentrations = np.ones((n_clusters,))
@@ -390,14 +403,18 @@ def _movMF(X, n_clusters, posterior_type='soft', max_iter=300, verbose=False,
         centers_prev = centers.copy()
 
         # expectation step
-        posterior = _expectation(X,
-                                centers,
-                                weights,
-                                concentrations,
-                                posterior_type=posterior_type)
+        posterior = _expectation(
+                X,
+                centers,
+                weights,
+                concentrations,
+                posterior_type=posterior_type)
 
         # maximization step
-        centers, weights, concentrations = _maximization(X, posterior)
+        centers, weights, concentrations = _maximization(
+                X,
+                posterior,
+                weights=force_weights)
 
         # check convergence
         tolcheck = squared_norm(centers_prev - centers)
@@ -418,8 +435,8 @@ def _movMF(X, n_clusters, posterior_type='soft', max_iter=300, verbose=False,
     return centers, weights, concentrations, posterior, labels, inertia
 
 
-def movMF(X, n_clusters, posterior_type='soft', n_init=10, n_jobs=1,
-            max_iter=300, verbose=False, init='random-orthonormal',
+def movMF(X, n_clusters, posterior_type='soft', force_weights=None, n_init=10,
+            n_jobs=1, max_iter=300, verbose=False, init='random-orthonormal',
             random_state=None, tol=1e-6, copy_x=True):
     """Wrapper for parallelization of _movMF and running n_init times.
     """
@@ -456,6 +473,7 @@ def movMF(X, n_clusters, posterior_type='soft', n_init=10, n_jobs=1,
                     X,
                     n_clusters,
                     posterior_type=posterior_type,
+                    force_weights=force_weights,
                     max_iter=max_iter,
                     verbose=verbose,
                     init=init,
@@ -471,12 +489,13 @@ def movMF(X, n_clusters, posterior_type='soft', n_init=10, n_jobs=1,
                 best_posterior = posterior.copy()
                 best_inertia = inertia
     else:
-        # parallelisation of k-means runs
+        # parallelisation of movMF runs
         seeds = random_state.randint(np.iinfo(np.int32).max, size=n_init)
         results = Parallel(n_jobs=n_jobs, verbose=0)(
             delayed(_movMF)(X,
                     n_clusters,
                     posterior_type=posterior_type,
+                    force_weights=force_weights,
                     max_iter=max_iter,
                     verbose=verbose,
                     init=init,
@@ -511,6 +530,10 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
     Attribution
     ----------
     Approximation of log-vmf distribution function from movMF R-package.
+
+    "movMF: An R Package for Fitting Mixtures of von Mises-Fisher Distributions"
+    by Kurt Hornik, Bettina Grun, 2014
+
     Find more at:
       https://cran.r-project.org/web/packages/movMF/vignettes/movMF.pdf
       https://cran.r-project.org/web/packages/movMF/index.html
@@ -526,6 +549,11 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
     posterior_type: 'soft' or 'hard'
         Type of posterior computed in exepectation step.
         See note about attribute: self.posterior_
+
+    force_weights : None or array [n_clusters, ]
+        If None, the algorithm will estimate the weights.
+        If an array of weights, algorithm will estimate concentrations and
+        centers with given weights.
 
     max_iter : int, default: 300
         Maximum number of iterations of the k-means algorithm for a
@@ -596,11 +624,12 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
         If posterior_type='soft' is used, this matrix will be dense and the
         column values correspond to soft clustering weights.
     """
-    def __init__(self, n_clusters, posterior_type='soft', n_init=10, n_jobs=1,
-            max_iter=300, verbose=False, init='random-orthonormal',
-            random_state=None, tol=1e-6, copy_x=True):
+    def __init__(self, n_clusters, posterior_type='soft', force_weights=None,
+            n_init=10, n_jobs=1, max_iter=300, verbose=False,
+            init='random-orthonormal', random_state=None, tol=1e-6, copy_x=True):
         self.n_clusters = n_clusters
         self.posterior_type = posterior_type
+        self.force_weights = force_weights
         self.n_init = n_init
         self.n_jobs = n_jobs
         self.max_iter = max_iter
@@ -618,6 +647,13 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
         self.concentrations_ = None
         self.posterior_ = None
 
+
+    def _check_force_weights(self):
+        if len(self.force_weights) != self.n_clusters:
+            raise ValueError(("len(force_weights)={} but must equal "
+                                "n_clusters={}".format(
+                                    len(self.force_weights),
+                                    self.n_clusters)))
 
     def _check_fit_data(self, X):
         """Verify that the number of samples given is larger than k"""
@@ -648,15 +684,17 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
         ----------
         X : array-like or sparse matrix, shape=(n_samples, n_features)
         """
+        self._check_force_weights()
         random_state = check_random_state(self.random_state)
         X = self._check_fit_data(X)
 
         (self.cluster_centers_, self.labels_, self.inertia_, self.weights_,
                 self.concentrations_, self.posterior_) = movMF(
                 X, self.n_clusters, posterior_type=self.posterior_type,
-                n_init=self.n_init, n_jobs=self.n_jobs, max_iter=self.max_iter,
-                verbose=self.verbose, init=self.init,
-                random_state=random_state, tol=self.tol, copy_x=self.copy_x)
+                force_weights=self.force_weights, n_init=self.n_init,
+                n_jobs=self.n_jobs, max_iter=self.max_iter,
+                verbose=self.verbose, init=self.init, random_state=random_state,
+                tol=self.tol, copy_x=self.copy_x)
 
         return self
 

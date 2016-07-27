@@ -13,12 +13,7 @@ from spherecluster import VonMisesFisherMixture
 
 plt.ion()
 
-'''
-Implements "small-mix" example from
-"Clustering on the Unit Hypersphere using von Mises-Fisher Distributions"
 
-Provides a basic smell test that the algoriths are performing as intended.
-'''
 
 ###############################################################################
 # Generate small-mix dataset
