@@ -38,7 +38,7 @@ labels[num_points_per_class:] = 1
 
 ###############################################################################
 # K-Means clustering
-km = KMeans(n_clusters=2, init='k-means++', n_init=10)
+km = KMeans(n_clusters=2, init='k-means++', n_init=20)
 km.fit(X)
 
 cdists = []
@@ -56,7 +56,7 @@ km_mu_1_error_norm = np.linalg.norm(mus[1] - km.cluster_centers_[km_mu_1_idx] / 
 
 ###############################################################################
 # Spherical K-Means clustering
-skm = SphericalKMeans(n_clusters=2, init='k-means++', n_init=10)
+skm = SphericalKMeans(n_clusters=2, init='k-means++', n_init=20)
 skm.fit(X)
 
 cdists = []
@@ -72,7 +72,7 @@ skm_mu_1_error = np.linalg.norm(mus[1] - skm.cluster_centers_[skm_mu_1_idx])
 
 ###############################################################################
 # Mixture of von Mises Fisher clustering (soft)
-vmf_soft = VonMisesFisherMixture(n_clusters=2, posterior_type='soft', n_init=10)
+vmf_soft = VonMisesFisherMixture(n_clusters=2, posterior_type='soft', n_init=20)
 vmf_soft.fit(X)
 
 cdists = []
@@ -90,7 +90,7 @@ vmf_soft_mu_1_error = np.linalg.norm(
 
 ###############################################################################
 # Mixture of von Mises Fisher clustering (hard)
-vmf_hard = VonMisesFisherMixture(n_clusters=2, posterior_type='hard', n_init=10)
+vmf_hard = VonMisesFisherMixture(n_clusters=2, posterior_type='hard', n_init=20)
 vmf_hard.fit(X)
 
 cdists = []
@@ -125,15 +125,9 @@ plt.show()
 ax = fig.add_subplot(3, 2, 3, aspect='equal', projection='3d',
         adjustable='box-forced', xlim=[-1.1, 1.1], ylim=[-1.1, 1.1],
         zlim=[-1.1, 1.1])
-for ex, label in zip(X, km.labels_):
-    if label == km_mu_0_idx:
-        color = 'r'
-    else:
-        color = 'b'
-
-    ax.scatter(ex[0], ex[1], ex[2], c=color)
-    plt.hold(True)
-
+ax.scatter(X[km.labels_ == km_mu_0_idx, 0], X[km.labels_ == km_mu_0_idx, 1], X[km.labels_ == km_mu_0_idx, 2], c='r')
+plt.hold(True)
+ax.scatter(X[km.labels_ == km_mu_1_idx, 0], X[km.labels_ == km_mu_1_idx, 1], X[km.labels_ == km_mu_1_idx, 2], c='b')
 ax.set_aspect('equal')
 plt.title('K-means clustering')
 plt.show()
@@ -142,15 +136,9 @@ plt.show()
 ax = fig.add_subplot(3, 2, 4, aspect='equal', projection='3d',
         adjustable='box-forced', xlim=[-1.1, 1.1], ylim=[-1.1, 1.1],
         zlim=[-1.1, 1.1])
-for ex, label in zip(X, skm.labels_):
-    if label == skm_mu_0_idx:
-        color = 'r'
-    else:
-        color = 'b'
-
-    ax.scatter(ex[0], ex[1], ex[2], c=color)
-    plt.hold(True)
-
+ax.scatter(X[skm.labels_ == skm_mu_0_idx, 0], X[skm.labels_ == skm_mu_0_idx, 1], X[skm.labels_ == skm_mu_0_idx, 2], c='r')
+plt.hold(True)
+ax.scatter(X[skm.labels_ == skm_mu_1_idx, 0], X[skm.labels_ == skm_mu_1_idx, 1], X[skm.labels_ == skm_mu_1_idx, 2], c='b')
 ax.set_aspect('equal')
 plt.title('Spherical K-means clustering')
 plt.show()
@@ -159,15 +147,9 @@ plt.show()
 ax = fig.add_subplot(3, 2, 5, aspect='equal', projection='3d',
         adjustable='box-forced', xlim=[-1.1, 1.1], ylim=[-1.1, 1.1],
         zlim=[-1.1, 1.1])
-for ex, label in zip(X, vmf_soft.labels_):
-    if label == vmf_soft_mu_0_idx:
-        color = 'r'
-    else:
-        color = 'b'
-
-    ax.scatter(ex[0], ex[1], ex[2], c=color)
-    plt.hold(True)
-
+ax.scatter(X[vmf_soft.labels_ == vmf_soft_mu_0_idx, 0], X[vmf_soft.labels_ == vmf_soft_mu_0_idx, 1], X[vmf_soft.labels_ == vmf_soft_mu_0_idx, 2], c='r')
+plt.hold(True)
+ax.scatter(X[vmf_soft.labels_ == vmf_soft_mu_1_idx, 0], X[vmf_soft.labels_ == vmf_soft_mu_1_idx, 1], X[vmf_soft.labels_ == vmf_soft_mu_1_idx, 2], c='b')
 ax.set_aspect('equal')
 plt.title('soft-movMF clustering')
 plt.show()
@@ -176,15 +158,9 @@ plt.show()
 ax = fig.add_subplot(3, 2, 6, aspect='equal', projection='3d',
         adjustable='box-forced', xlim=[-1.1, 1.1], ylim=[-1.1, 1.1],
         zlim=[-1.1, 1.1])
-for ex, label in zip(X, vmf_hard.labels_):
-    if label == vmf_hard_mu_0_idx:
-        color = 'r'
-    else:
-        color = 'b'
-
-    ax.scatter(ex[0], ex[1], ex[2], c=color)
-    plt.hold(True)
-
+ax.scatter(X[vmf_hard.labels_ == vmf_hard_mu_0_idx, 0], X[vmf_hard.labels_ == vmf_hard_mu_0_idx, 1], X[vmf_hard.labels_ == vmf_hard_mu_0_idx, 2], c='r')
+plt.hold(True)
+ax.scatter(X[vmf_hard.labels_ == vmf_hard_mu_1_idx, 0], X[vmf_hard.labels_ == vmf_hard_mu_1_idx, 1], X[vmf_hard.labels_ == vmf_hard_mu_1_idx, 2], c='b')
 ax.set_aspect('equal')
 plt.title('hard-movMF clustering')
 plt.show()

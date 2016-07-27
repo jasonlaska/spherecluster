@@ -57,7 +57,7 @@ km_mu_1_error_norm = np.linalg.norm(mus[1] - km.cluster_centers_[km_mu_1_idx] / 
 
 ###############################################################################
 # Spherical K-Means clustering
-skm = SphericalKMeans(n_clusters=2, init='k-means++', n_init=10)
+skm = SphericalKMeans(n_clusters=2, init='k-means++', n_init=20)
 skm.fit(X)
 
 cdists = []
@@ -73,7 +73,7 @@ skm_mu_1_error = np.linalg.norm(mus[1] - skm.cluster_centers_[skm_mu_1_idx])
 
 ###############################################################################
 # Mixture of von Mises Fisher clustering (soft)
-vmf_soft = VonMisesFisherMixture(n_clusters=2, posterior_type='soft', n_init=10)
+vmf_soft = VonMisesFisherMixture(n_clusters=2, posterior_type='soft', n_init=20)
 vmf_soft.fit(X)
 
 cdists = []
@@ -91,7 +91,8 @@ vmf_soft_mu_1_error = np.linalg.norm(
 
 ###############################################################################
 # Mixture of von Mises Fisher clustering (hard)
-vmf_hard = VonMisesFisherMixture(n_clusters=2, posterior_type='hard', n_init=10)
+vmf_hard = VonMisesFisherMixture(n_clusters=2, posterior_type='hard', n_init=20,
+        init='random-orthonormal')
 vmf_hard.fit(X)
 
 cdists = []
