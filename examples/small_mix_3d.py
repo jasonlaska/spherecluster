@@ -119,9 +119,9 @@ fig = plt.figure(figsize=(8, 6))
 ax = fig.add_subplot(3, 2, 1, aspect='equal', projection='3d',
         adjustable='box-forced', xlim=[-1.1, 1.1], ylim=[-1.1, 1.1],
         zlim=[-1.1, 1.1])
-ax.scatter(X_1[:, 0], X_1[:, 1], X_1[:, 2], c='b')
-ax.hold(True)
 ax.scatter(X_0[:, 0], X_0[:, 1], X_0[:, 2], c='r')
+ax.hold(True)
+ax.scatter(X_1[:, 0], X_1[:, 1], X_1[:, 2], c='b')
 ax.set_aspect('equal')
 plt.title('Original data')
 plt.show()
