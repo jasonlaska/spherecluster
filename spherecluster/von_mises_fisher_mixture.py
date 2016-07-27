@@ -363,7 +363,7 @@ def _movMF(X, n_clusters, posterior_type='soft', force_weights=None,
         random : random unit norm vectors
         random-orthonormal : random orthonormal vectors
 
-    tol : float, default: 1e-4
+    tol : float, default: 1e-6
         Relative tolerance with regards to inertia to declare convergence
 
     n_jobs : int
@@ -580,7 +580,7 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
         random : random unit norm vectors
         random-orthonormal : random orthonormal vectors
 
-    tol : float, default: 1e-4
+    tol : float, default: 1e-6
         Relative tolerance with regards to inertia to declare convergence
 
     n_jobs : int
