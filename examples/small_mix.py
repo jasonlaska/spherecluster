@@ -37,6 +37,7 @@ X[num_points_per_class:, :] = X_1
 labels = np.zeros((2 * num_points_per_class, ))
 labels[num_points_per_class:] = 1
 
+
 ###############################################################################
 # K-Means clustering
 km = KMeans(n_clusters=2, init='k-means++', n_init=10)
