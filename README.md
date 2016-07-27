@@ -11,17 +11,21 @@ This package implements the three algorithms outlined in ["Clustering on the Uni
 
 2. Mixtures of von Mises Fisher distributions (movMF)
 
-    The [von Mises Fisher distribution](https://en.wikipedia.org/wiki/Von_Mises%E2%80%93Fisher_distribution) is commonly used in directional statistics.  Much like the Gaussian distribution has a mean and variance, the von Mises Fisher distribution has a mean direction $\mu$ and a concentration paramater $\kappa$, however, all points are on the unit hypersphere.
+    Much like the Gaussian distribution is parameterized by mean and variance, the [von Mises Fisher distribution](https://en.wikipedia.org/wiki/Von_Mises%E2%80%93Fisher_distribution) has a mean direction $\mu$ and a concentration parameter $\kappa$. Points drawn from the vMF distribution have unit norm and thus live on surface of the unit hypersphere.
 
     If we model our data as a [mixture](https://en.wikipedia.org/wiki/Mixture_model) of von Mises Fisher Distributions, we have an additional `weight` parameter for each distribution in the mixture, and can cluster our data accordingly.
 
     - soft-movMF
 
-        Estimates the posterior on each example for each class.
+        Estimates the real-valued posterior on each example for each class.
 
     - hard-movMF
 
         Sets the posterior on each example to be 1 for a single class and 0 for all others by selecting the location of the max value in the estimator soft posterior.
+
+    Beyond estimating cluster centroids, these algorithms also jointly estimate the weights of each cluster and the concentration parameters.  We provide an option to pass in (and override) weight estimates if they are known in advance.
+
+    Label assigment is achieved by computing the argmax of the posterior for each example.
 
 
 ## Other goodies
@@ -65,7 +69,9 @@ Both `SphericalKMeans` and `VonMisesFisherMixture` are standard sklearn estimato
     # vmf_hard.concentrations_
     # vmf_hard.intertia_
 
-Other notes of interest:
+The full set of parameters for the `VonMisesFisherMixture` class can be found here: [https://github.com/clara-labs/spherecluster/blob/develop/spherecluster/von_mises_fisher_mixture.py#L529](https://github.com/clara-labs/spherecluster/blob/develop/spherecluster/von_mises_fisher_mixture.py#L529)
+
+Other notes:
 
 - `SphericalKMeans` projects each centroid onto the sphere at the end of each EM iteration and is therefore a small modification to `sklearn.cluster.kmeans`
 - X can be a dense `numpy.array` or a sparse `scipy.sparse.csr_matrix`
@@ -75,15 +81,22 @@ Other notes of interest:
 # Examples
 
 ## Small mix
+We reproduce the "small mix" 2D example from [Section 6.3](http://www.jmlr.org/papers/volume6/banerjee05a/banerjee05a.pdf) in `examples/small_mix.py`.  We've adjusted the parameters such that one distribution in the mixture has much lower concentration than the other to distinguish between movMF performance and (spherical) k-means which do not estimate weight or concentration parameters.  We also provide a 3D version of this example in `examples/small_mix_3d.py` for fun.
+
+Running these scripts will spit out some additional metrics.
 
 <img src="images/small_mix_2d.png" alt="Small mix 2d" width="500">
 <img src="images/small_mix_3d.png" alt="Small mix 3d" width="500">
 
+It is clear from the figures that the movMF algorithms do a better job at taking advantage of the concentration estimate.
+
 
 ## Document clustering
+We also reproduce [this scikit-learn k-means demo](http://scikit-learn.org/stable/auto_examples/text/document_clustering.html) in `examples/document_clustering.py`.  The results are different on each run but here's a chart comparing the algorithms' performances for a sample run:
 
 <img src="images/document_clustering.png" alt="Document clustering" width="800">
 
+Spherical k-means, which is a simple modification to the standard k-means algorithm performs quite well and should be considered for these kidns of problens.
 
 # Acknowledgments
 
@@ -105,7 +118,7 @@ Other notes of interest:
         ["https://cran.r-project.org/web/packages/movMF/index.html"](https://cran.r-project.org/web/packages/movMF/index.html)
 
 
-# Other implementations
+## Other implementations
 - [movMF in R](https://cran.r-project.org/web/packages/movMF/index.html)
 
 - [movMF in python for 3 dimensions (via NIPY)](http://nipy.sourceforge.net/nipy/devel/api/generated/nipy.algorithms.clustering.von_mises_fisher_mixture.html)
