@@ -28,7 +28,7 @@ The tools in this package are sklearn estimators and mirror the interface and pa
 
     # movMF-soft
     from spherecluster import VonMisesFisherMixture
-    vmf_soft = VonMisesFisherMixture(n_clusters=true_k, posterior_type='soft')
+    vmf_soft = VonMisesFisherMixture(n_clusters=K, posterior_type='soft')
     vmf_soft.fit(X)
 
     # vmf_soft.cluster_centers_
@@ -38,7 +38,7 @@ The tools in this package are sklearn estimators and mirror the interface and pa
 
     # movMF-hard
     from spherecluster import VonMisesFisherMixture
-    vmf_hard = VonMisesFisherMixture(n_clusters=true_k, posterior_type='hard')
+    vmf_hard = VonMisesFisherMixture(n_clusters=K, posterior_type='hard')
     vmf_hard.fit(X)
 
     # vmf_hard.cluster_centers_
