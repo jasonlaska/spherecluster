@@ -3,7 +3,7 @@
 <img src="images/sphere_w_clusters.png" alt="Mixture of von Mises Fisher" width="400">
 
 ## Algorithms
-This package implements the three algorithms outlined in ["Clustering on the Unit Hypersphere using von Mises-Fisher Distributions"](http://www.jmlr.org/papers/volume6/banerjee05a/banerjee05a.pdf), Banerjee et al., JMLR 2005.
+This package implements the three algorithms outlined in ["Clustering on the Unit Hypersphere using von Mises-Fisher Distributions"](http://www.jmlr.org/papers/volume6/banerjee05a/banerjee05a.pdf), Banerjee et al., JMLR 2005, for scikit-learn.
 
 1. Spherical K-means
 
@@ -16,9 +16,11 @@ This package implements the three algorithms outlined in ["Clustering on the Uni
     If we model our data as a [mixture](https://en.wikipedia.org/wiki/Mixture_model) of von Mises Fisher Distributions, we have an additional `weight` parameter for each distribution in the mixture, and can cluster our data accordingly.
 
     - soft-movMF:
+
         Estimates the posterior on each example for each class.
 
     - hard-movMF:
+
         Sets the posterior on each example to be 1 for a single class and 0 for all others by selecting the location of the max value in the estimator soft posterior.
 
 
