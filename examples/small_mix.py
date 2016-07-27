@@ -110,8 +110,11 @@ vmf_hard_mu_1_error = np.linalg.norm(
 ###############################################################################
 # Show results
 
-# Original data
 plt.figure()
+
+# Original data
+ax = plt.subplot(1, 5, 1, aspect='equal', adjustable='box-forced',
+        xlim=[-1.1, 1.1], ylim=[-1.1, 1.1])
 for ex in X_0:
     plt.plot(ex[0], ex[1], 'r+')
     plt.hold(True)
@@ -125,7 +128,8 @@ plt.title('Original data')
 plt.show()
 
 # K-means labels
-plt.figure()
+ax = plt.subplot(1, 5, 2, aspect='equal', adjustable='box-forced',
+        xlim=[-1.1, 1.1], ylim=[-1.1, 1.1])
 for ex, label in zip(X, km.labels_):
     if label == km_mu_0_idx:
         plt.plot(ex[0], ex[1], 'r+')
@@ -140,7 +144,8 @@ plt.title('K-means clustering')
 plt.show()
 
 # Spherical K-means labels
-plt.figure()
+ax = plt.subplot(1, 5, 3, aspect='equal', adjustable='box-forced',
+        xlim=[-1.1, 1.1], ylim=[-1.1, 1.1])
 for ex, label in zip(X, skm.labels_):
     if label == skm_mu_0_idx:
         plt.plot(ex[0], ex[1], 'r+')
@@ -155,7 +160,8 @@ plt.title('Spherical K-means clustering')
 plt.show()
 
 # von Mises Fisher soft labels
-plt.figure()
+ax = plt.subplot(1, 5, 4, aspect='equal', adjustable='box-forced',
+        xlim=[-1.1, 1.1], ylim=[-1.1, 1.1])
 for ex, label in zip(X, vmf_soft.labels_):
     if label == vmf_soft_mu_0_idx:
         plt.plot(ex[0], ex[1], 'r+')
@@ -166,11 +172,12 @@ for ex, label in zip(X, vmf_soft.labels_):
 plt.axis('equal')
 plt.xlim([-1.1, 1.1])
 plt.ylim([-1.1, 1.1])
-plt.title('von Mises Fisher clustering (soft)')
+plt.title('soft-movMF clustering')
 plt.show()
 
 # von Mises Fisher hard labels
-plt.figure()
+ax = plt.subplot(1, 5, 5, aspect='equal', adjustable='box-forced',
+        xlim=[-1.1, 1.1], ylim=[-1.1, 1.1])
 for ex, label in zip(X, vmf_hard.labels_):
     if label == vmf_hard_mu_0_idx:
         plt.plot(ex[0], ex[1], 'r+')
@@ -181,7 +188,7 @@ for ex, label in zip(X, vmf_hard.labels_):
 plt.axis('equal')
 plt.xlim([-1.1, 1.1])
 plt.ylim([-1.1, 1.1])
-plt.title('von Mises Fisher clustering (hard)')
+plt.title('hard-movMF clustering')
 plt.show()
 
 

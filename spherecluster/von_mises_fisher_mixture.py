@@ -4,7 +4,6 @@ import numpy as np
 import scipy.sparse as sp
 from scipy.special import iv # modified bessel function of first kind
 from numpy import i0 # Modified Bessel function of the first kind, order 0, I_0
-from scipy.sparse import csr_matrix
 from scipy.misc import logsumexp
 
 from sklearn.base import BaseEstimator, ClusterMixin, TransformerMixin
@@ -93,9 +92,8 @@ def _log_H_asymptotic(nu, kappa):
     # we have that log(f(x|theta)) = theta' x - log(H_{d/2-1})(\|theta\|)
     beta = _beta_SS(nu)
     kappa_l = np.min([kappa, np.sqrt((3. * nu + 11. / 2.) * (nu + 3. / 2.))])
-    return _S(kappa, nu + 1/2, beta) +\
-            (_S(kappa_l, nu, nu + 2) -\
-            _S(kappa_l, nu + 0.5, beta))
+    return _S(kappa, nu + 0.5, beta) +\
+            (_S(kappa_l, nu, nu + 2.) - _S(kappa_l, nu + 0.5, beta))
 
 
 def _S(kappa, alpha, beta):
@@ -150,16 +148,12 @@ def _update_params(X, posterior):
 
         centers[cc, :] = X_scaled.sum(axis=0)
 
-        # precomput center norm
-        center_norm = np.linalg.norm(centers[cc, :])
-
-        # precompute for kappa estimate
-        rbar = center_norm / (n_examples * weights[cc])
-
         # normalize centers
-        centers[cc, :] = 1. * centers[cc, :] / center_norm
+        center_norm = np.linalg.norm(centers[cc, :])
+        centers[cc, :] = centers[cc, :] / center_norm
 
-        # update concentration (kappa)
+        # update concentration (kappa) [TODO: add other kappa approximations]
+        rbar = center_norm / (n_examples * weights[cc])
         concentrations[cc] = rbar * n_features - np.power(rbar, 3.)
         concentrations[cc] /= 1. - np.power(rbar, 2.)
 
@@ -184,7 +178,7 @@ def _init_unit_centers(X, n_clusters, random_state, init):
 
     init:  (string) one of
         k-means++ : uses sklearn k-means++ initialization algorithm
-        spherical-k-means : use centroids form one pass of spherical k-means
+        spherical-k-means : use centroids from one pass of spherical k-means
         random : random unit norm vectors
         random-orthonormal : random orthonormal vectors
     """
@@ -234,12 +228,77 @@ def _init_unit_centers(X, n_clusters, random_state, init):
         return centers
 
 
-def _moVMF(X, n_clusters, posterior_type='soft', max_iter=300, verbose=False,
+def _movMF(X, n_clusters, posterior_type='soft', max_iter=300, verbose=False,
                init='random-orthonormal', random_state=None, tol=1e-6):
     """Mixture of von Mises Fisher clustering.
 
     Implements the algorithms (i) and (ii) from
-    "Clustering on the Unit Hypersphere using von Mises-Fisher Distributions"
+
+      "Clustering on the Unit Hypersphere using von Mises-Fisher Distributions"
+      by Banerjee, Dhillon, Ghosh, and Sra.
+
+    TODO: Currently only supports Banerjee et al 2005 approximation of kappa,
+          however, there are numerous other approximations see _update_params.
+
+    Attribution
+    ----------
+
+    Approximation of log-vmf distribution function from movMF R-package.
+    Find more at:
+      https://cran.r-project.org/web/packages/movMF/vignettes/movMF.pdf
+      https://cran.r-project.org/web/packages/movMF/index.html
+
+    Parameters
+    ----------
+
+    n_clusters : int, optional, default: 8
+        The number of clusters to form as well as the number of
+        centroids to generate.
+
+    posterior_type: 'soft' or 'hard'
+        Type of posterior computed in exepectation step.
+        See note about attribute: self.posterior_
+
+    max_iter : int, default: 300
+        Maximum number of iterations of the k-means algorithm for a
+        single run.
+
+    n_init : int, default: 10
+        Number of time the k-means algorithm will be run with different
+        centroid seeds. The final results will be the best output of
+        n_init consecutive runs in terms of inertia.
+
+    init:  (string) one of
+        k-means++ : uses sklearn k-means++ initialization algorithm
+        spherical-k-means : use centroids from one pass of spherical k-means
+        random : random unit norm vectors
+        random-orthonormal : random orthonormal vectors
+
+    tol : float, default: 1e-4
+        Relative tolerance with regards to inertia to declare convergence
+
+    n_jobs : int
+        The number of jobs to use for the computation. This works by computing
+        each of the n_init runs in parallel.
+        If -1 all CPUs are used. If 1 is given, no parallel computing code is
+        used at all, which is useful for debugging. For n_jobs below -1,
+        (n_cpus + 1 + n_jobs) are used. Thus for n_jobs = -2, all CPUs but one
+        are used.
+
+    random_state : integer or numpy.RandomState, optional
+        The generator used to initialize the centers. If an integer is
+        given, it fixes the seed. Defaults to the global numpy random
+        number generator.
+
+    verbose : int, default 0
+        Verbosity mode.
+
+    copy_x : boolean, default True
+        When pre-computing distances it is more numerically accurate to center
+        the data first.  If copy_x is True, then the original data is not
+        modified.  If False, the original data is modified, and put back before
+        the function returns, but small numerical differences may be introduced
+        by subtracting and then adding the data mean.
     """
     random_state = check_random_state(random_state)
     n_examples, n_features = np.shape(X)
@@ -307,10 +366,10 @@ def _moVMF(X, n_clusters, posterior_type='soft', max_iter=300, verbose=False,
     return centers, weights, concentrations, posterior, labels, inertia
 
 
-def moVMF(X, n_clusters, posterior_type='soft', n_init=10, n_jobs=1,
-            max_iter=300, verbose=False, init='random-orthonormal', random_state=None,
-            tol=1e-6, copy_x=True):
-    """
+def movMF(X, n_clusters, posterior_type='soft', n_init=10, n_jobs=1,
+            max_iter=300, verbose=False, init='random-orthonormal',
+            random_state=None, tol=1e-6, copy_x=True):
+    """Wrapper for parallelization of _movMF and running n_init times.
     """
     if n_init <= 0:
         raise ValueError("Invalid number of initializations."
@@ -341,7 +400,7 @@ def moVMF(X, n_clusters, posterior_type='soft', n_init=10, n_jobs=1,
         # of the best results (as opposed to one set per run per thread).
         for it in range(n_init):
             # cluster on the sphere
-            centers, weights, concentrations, posterior, labels, inertia = _moVMF(
+            centers, weights, concentrations, posterior, labels, inertia = _movMF(
                     X,
                     n_clusters,
                     posterior_type=posterior_type,
@@ -363,7 +422,7 @@ def moVMF(X, n_clusters, posterior_type='soft', n_init=10, n_jobs=1,
         # parallelisation of k-means runs
         seeds = random_state.randint(np.iinfo(np.int32).max, size=n_init)
         results = Parallel(n_jobs=n_jobs, verbose=0)(
-            delayed(_moVMF)(X,
+            delayed(_movMF)(X,
                     n_clusters,
                     posterior_type=posterior_type,
                     max_iter=max_iter,
@@ -387,11 +446,107 @@ def moVMF(X, n_clusters, posterior_type='soft', n_init=10, n_jobs=1,
 
 
 class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
-    """
+    """Estimator for Mixture of von Mises Fisher clustering on the unit sphere.
+
+    Implements the algorithms (i) and (ii) from
+
+      "Clustering on the Unit Hypersphere using von Mises-Fisher Distributions"
+      by Banerjee, Dhillon, Ghosh, and Sra.
+
+    TODO: Currently only supports Banerjee et al 2005 approximation of kappa,
+          however, there are numerous other approximations see _update_params.
+
+    Attribution
+    ----------
+
+    Approximation of log-vmf distribution function from movMF R-package.
+    Find more at:
+      https://cran.r-project.org/web/packages/movMF/vignettes/movMF.pdf
+      https://cran.r-project.org/web/packages/movMF/index.html
+
+    Parameters
+    ----------
+
+    n_clusters : int, optional, default: 8
+        The number of clusters to form as well as the number of
+        centroids to generate.
+
+    posterior_type: 'soft' or 'hard'
+        Type of posterior computed in exepectation step.
+        See note about attribute: self.posterior_
+
+    max_iter : int, default: 300
+        Maximum number of iterations of the k-means algorithm for a
+        single run.
+
+    n_init : int, default: 10
+        Number of time the k-means algorithm will be run with different
+        centroid seeds. The final results will be the best output of
+        n_init consecutive runs in terms of inertia.
+
+    init:  (string) one of
+        k-means++ : uses sklearn k-means++ initialization algorithm
+        spherical-k-means : use centroids from one pass of spherical k-means
+        random : random unit norm vectors
+        random-orthonormal : random orthonormal vectors
+
+    tol : float, default: 1e-4
+        Relative tolerance with regards to inertia to declare convergence
+
+    n_jobs : int
+        The number of jobs to use for the computation. This works by computing
+        each of the n_init runs in parallel.
+        If -1 all CPUs are used. If 1 is given, no parallel computing code is
+        used at all, which is useful for debugging. For n_jobs below -1,
+        (n_cpus + 1 + n_jobs) are used. Thus for n_jobs = -2, all CPUs but one
+        are used.
+
+    random_state : integer or numpy.RandomState, optional
+        The generator used to initialize the centers. If an integer is
+        given, it fixes the seed. Defaults to the global numpy random
+        number generator.
+
+    verbose : int, default 0
+        Verbosity mode.
+
+    copy_x : boolean, default True
+        When pre-computing distances it is more numerically accurate to center
+        the data first.  If copy_x is True, then the original data is not
+        modified.  If False, the original data is modified, and put back before
+        the function returns, but small numerical differences may be introduced
+        by subtracting and then adding the data mean.
+
+    Attributes
+    ----------
+
+    cluster_centers_ : array, [n_clusters, n_features]
+        Coordinates of cluster centers
+
+    labels_ :
+        Labels of each point
+
+    inertia_ : float
+        Sum of distances of samples to their closest cluster center.
+
+    weights_ : array, [n_clusters,]
+        Weights of each cluster in vMF distribution (alpha).
+
+    concentrations_ : array [n_clusters,]
+        Concentration parameter for each cluster (kappa).
+        Larger values correspond to more concentrated clusters.
+
+    posterior_ : array, [n_clusters, n_examples]
+        Each column corresponds to the posterio distribution for and example.
+
+        If posterior_type='hard' is used, there will only be one non-zero per
+        column, its index corresponding to the example's cluster label.
+
+        If posterior_type='soft' is used, this matrix will be dense and the
+        column values correspond to soft clustering weights.
     """
     def __init__(self, n_clusters, posterior_type='soft', n_init=10, n_jobs=1,
-            max_iter=300, verbose=False, init='random-orthonormal', random_state=None,
-            tol=1e-6, copy_x=True):
+            max_iter=300, verbose=False, init='random-orthonormal',
+            random_state=None, tol=1e-6, copy_x=True):
         self.n_clusters = n_clusters
         self.posterior_type = posterior_type
         self.n_init = n_init
@@ -445,7 +600,7 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
         X = self._check_fit_data(X)
 
         (self.cluster_centers_, self.labels_, self.inertia_, self.weights_,
-                self.concentrations_, self.posterior_) = moVMF(
+                self.concentrations_, self.posterior_) = movMF(
                 X, self.n_clusters, posterior_type=self.posterior_type,
                 n_init=self.n_init, n_jobs=self.n_jobs, max_iter=self.max_iter,
                 verbose=self.verbose, init=self.init,
