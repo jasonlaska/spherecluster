@@ -87,7 +87,7 @@ Other notes of interest:
 
 # Acknowledgments
 
-- Primary reference on algorithms: ["Clustering on the Unit Hypersphere using von Mises-Fisher Distributions"](http://www.jmlr.org/papers/volume6/banerjee05a/banerjee05a.pdf)
+- Primary reference on algorithms: ["Clustering on the Unit Hypersphere using von Mises-Fisher Distributions"](http://www.jmlr.org/papers/volume6/banerjee05a/banerjee05a.pdf).
 
 - Related references:
 
@@ -95,14 +95,14 @@ Other notes of interest:
 
     - ["Directional statistics in machine learning: a brief review"](https://arxiv.org/pdf/1605.00316.pdf), S. Sra, Arxiv, May 2016.
 
-    - ["A short note on parameter approximation for von Mises-Fisher distributions"](http://www.kyb.mpg.de/fileadmin/user_upload/files/publications/attachments/vmfnote_7045%5b0%5d.pdf)
+    - ["A short note on parameter approximation for von Mises-Fisher distributions"](http://www.kyb.mpg.de/fileadmin/user_upload/files/publications/attachments/vmfnote_7045%5b0%5d.pdf), S. Sra.
 
-- For large values of $\eta$ and $\kappa$ we compute the log-vMF density via approximations found in
+- For large values of $\eta$ and $\kappa$ we compute the log-vMF density via approximations found in:
 
-    ["movMF: An R Package for Fitting Mixtures of von Mises-Fisher Distributions"](https://cran.r-project.org/web/packages/movMF/vignettes/movMF.pdf), K. Hornik and B.  Grün, Journal of Statistical Software, 2014.
+    - ["movMF: An R Package for Fitting Mixtures of von Mises-Fisher Distributions"](https://cran.r-project.org/web/packages/movMF/vignettes/movMF.pdf), K. Hornik and B.  Grün, Journal of Statistical Software, 2014.
 
-    Find more at:
-    ["https://cran.r-project.org/web/packages/movMF/index.html"](https://cran.r-project.org/web/packages/movMF/index.html)
+        Find more at:
+        ["https://cran.r-project.org/web/packages/movMF/index.html"](https://cran.r-project.org/web/packages/movMF/index.html)
 
 
 # Other implementations
