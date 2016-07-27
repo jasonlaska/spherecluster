@@ -18,33 +18,33 @@ The tools in this package are sklearn estimators and mirror the interface and pa
 
     # Find K clusters from data matrix X (n_examples x n_features)
 
-    # Spherical K-Means
+    # spherical k-means
     from spherecluster import SphericalKMeans
     skm = SphericalKMeans(n_clusters=K)
     skm.fit(X)
 
-    print skm.cluster_centers_
-    print skm.labels_
+    # skm.cluster_centers_
+    # skm.labels_
 
     # movMF-soft
     from spherecluster import VonMisesFisherMixture
     vmf_soft = VonMisesFisherMixture(n_clusters=true_k, posterior_type='soft')
     vmf_soft.fit(X)
 
-    print vmf_soft.cluster_centers_
-    print vmf_soft.labels_
-    print vmf_soft.weights_
-    print vmf_soft.concentrations_
+    # vmf_soft.cluster_centers_
+    # vmf_soft.labels_
+    # vmf_soft.weights_
+    # vmf_soft.concentrations_
 
     # movMF-hard
     from spherecluster import VonMisesFisherMixture
     vmf_hard = VonMisesFisherMixture(n_clusters=true_k, posterior_type='hard')
     vmf_hard.fit(X)
 
-    print vmf_hard.cluster_centers_
-    print vmf_hard.labels_
-    print vmf_hard.weights_
-    print vmf_hard.concentrations_
+    # vmf_hard.cluster_centers_
+    # vmf_hard.labels_
+    # vmf_hard.weights_
+    # vmf_hard.concentrations_
 
 # Examples
 
