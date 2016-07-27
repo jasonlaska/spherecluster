@@ -398,6 +398,8 @@ def _movMF(X, n_clusters, posterior_type='soft', force_weights=None,
     if force_weights is None:
         weights = np.ones((n_clusters,))
         weights = weights / np.sum(weights)
+    else:
+        weights = force_weights
 
     # init concentrations (kappas)
     concentrations = np.ones((n_clusters,))
