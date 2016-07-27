@@ -1,11 +1,7 @@
-# spherecluster
+# Clustering on the unit hypersphere in scikit-learn
 Clustering routines for the unit sphere
 
-Notes to clean up later:
-
-# Clustering on the unit hypersphere
-
-##Implements
+#Algorithms
 
 - Spherical K-Means
 
