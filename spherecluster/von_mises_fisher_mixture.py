@@ -57,16 +57,22 @@ def _labels_inertia(X, centers):
     return labels, 1 - np.sum(intertia)
 
 
-def _vmf(X, kappa, mu):
-    """Computs VMF using built in scipy Bessel approximations.
-    Good for small kappa, mu.
-    Returns log of VMF.
+def _vmf_log(X, kappa, mu):
+    """Computs log(vMF(X, kappa, mu)) using built-in numpy/scipy Bessel
+    approximations.
+
+    Works well on small kappa and mu.
     """
     n_examples, n_features = X.shape
     return np.log(_vmf_normalize(kappa, n_features) * np.exp(kappa * X.dot(mu).T))
 
 
 def _vmf_normalize(kappa, dim):
+    """Compute normalization constant using built-in numpy/scipy Bessel
+    approximations.
+
+    Works well on small kappa and mu.
+    """
     num = np.power(kappa, dim/2. - 1.)
 
     if dim/2. - 1. < 1e-15:
@@ -81,15 +87,16 @@ def _vmf_normalize(kappa, dim):
 
 
 def _beta_SS(nu):
-    # from movMF in R, movMF.R
     return np.sqrt((nu + 0.5)**2)
 
 
 def _log_H_asymptotic(nu, kappa):
-    # from movMF in R, movMF.R
-    # amos-type approximation / upperbound
-    # see "lH_asymptotic <-" in movMF.R
-    # we have that log(f(x|theta)) = theta' x - log(H_{d/2-1})(\|theta\|)
+    """Compute the Amos-type upper bound asymptotic approximation on H where
+    log(H_\nu)(\kappa) = \int_0^\kappa R_\nu(t) dt.
+
+    See "lH_asymptotic <-" in movMF.R and utility function implementation notes
+    from https://cran.r-project.org/web/packages/movMF/index.html
+    """
     beta = _beta_SS(nu)
     kappa_l = np.min([kappa, np.sqrt((3. * nu + 11. / 2.) * (nu + 3. / 2.))])
     return _S(kappa, nu + 0.5, beta) +\
@@ -97,10 +104,14 @@ def _log_H_asymptotic(nu, kappa):
 
 
 def _S(kappa, alpha, beta):
-    # from movMF, movMF.R
-    # see "S <-" in movMF.R
-    # antiderivative of amos-bound on G
-    # this is simplified a bit to work only on scalars
+    """Compute the antiderivative of the Amos-type bound G on the modified
+    Bessel function ratio.
+
+    Note:  Handles scalar kappa, alpha, and beta only.
+
+    See "S <-" in movMF.R and utility function implementation notes from
+    https://cran.r-project.org/web/packages/movMF/index.html
+    """
     kappa = 1. * np.abs(kappa)
     alpha = 1. * alpha
     beta = 1. * np.abs(beta)
@@ -114,50 +125,23 @@ def _S(kappa, alpha, beta):
     return u - beta - alpha_scale
 
 
-def _vmf_log(X, kappa, mu):
+def _vmf_log_asymptotic(X, kappa, mu):
     """Compute log(f(x|theta)) via Amos approximation
 
         log(f(x|theta)) = theta' x - log(H_{d/2-1})(\|theta\|)
 
-    where theta = kappa * X, \|theta\| = kappa
+    where theta = kappa * X, \|theta\| = kappa.
+
+    Computing _vmf_log helps with numerical stability / loss of precision for
+    for large values of kappa and n_features.
+
+    See utility function implementation notes in movMF.R from
+    https://cran.r-project.org/web/packages/movMF/index.html
     """
     n_examples, n_features = X.shape
     log_vfm = kappa * X.dot(mu).T +\
             -_log_H_asymptotic(n_features / 2. - 1., kappa)
     return log_vfm
-
-
-def _update_params(X, posterior):
-    n_examples, n_features = X.shape
-    n_clusters, n_examples = posterior.shape
-    weights = np.zeros((n_clusters,))
-    concentrations = np.zeros((n_clusters,))
-    centers = np.zeros((n_clusters, n_features))
-
-    for cc in range(n_clusters):
-        # update weights (alpha)
-        weights[cc] = np.mean(posterior[cc, :])
-
-        # update centers (mu)
-        X_scaled = X.copy()
-        if sp.issparse(X):
-            X_scaled.data *= posterior[cc, :].repeat(np.diff(X_scaled.indptr))
-        else:
-            for ee in range(n_examples):
-                X_scaled[ee, :] *= posterior[cc, ee]
-
-        centers[cc, :] = X_scaled.sum(axis=0)
-
-        # normalize centers
-        center_norm = np.linalg.norm(centers[cc, :])
-        centers[cc, :] = centers[cc, :] / center_norm
-
-        # update concentration (kappa) [TODO: add other kappa approximations]
-        rbar = center_norm / (n_examples * weights[cc])
-        concentrations[cc] = rbar * n_features - np.power(rbar, 3.)
-        concentrations[cc] /= 1. - np.power(rbar, 2.)
-
-    return centers, weights, concentrations
 
 
 def _init_unit_centers(X, n_clusters, random_state, init):
@@ -226,6 +210,94 @@ def _init_unit_centers(X, n_clusters, random_state, init):
             centers[cc, :] = centers[cc, :] / np.linalg.norm(centers[cc, :])
 
         return centers
+
+
+def _expectation(X, centers, weights, concentrations, posterior_type='soft'):
+    """Compute the log-likelihood of each datapoint being in each cluster.
+
+    Parameters
+    ----------
+    centers (mu) : array, [n_centers x n_features]
+    weights (alpha) : array, [n_centers, ] (alpha)
+    concentrations (kappa) : array, [n_centers, ]
+
+    Returns
+    ----------
+    posterior : array, [n_centers, n_examples]
+    """
+    n_examples, n_features = np.shape(X)
+    n_clusters, _ = centers.shape
+
+    if n_features <= 50:  # works up to about 50 before numrically unstable
+        vmf_f = _vmf_log
+    else:
+        vmf_f = _vmf_log_asymptotic
+
+    f_log = np.zeros((n_clusters, n_examples))
+    for cc in range(n_clusters):
+        f_log[cc, :] = vmf_f(X, concentrations[cc], centers[cc, :])
+
+    posterior = np.zeros((n_clusters, n_examples))
+    if posterior_type == 'soft':
+        weights_log = np.log(weights)
+        posterior = np.tile(weights_log.T, (n_examples, 1)).T + f_log
+        for ee in range(n_examples):
+            posterior[:, ee] = np.exp(
+                    posterior[:, ee] - logsumexp(posterior[:, ee]))
+
+    elif posterior_type == 'hard':
+        weights_log = np.log(weights)
+        weighted_f_log = np.tile(weights_log.T, (n_examples, 1)).T + f_log
+        for ee in range(n_examples):
+            posterior[np.argmax(weighted_f_log[:, ee]), ee] = 1.0
+
+    return posterior
+
+
+def _maximization(X, posterior):
+    """Estimate new centers, weights, and concentrations from
+
+    Parameters
+    ----------
+    posterior : array, [n_centers, n_examples]
+        The posterior matrix from the expectation step.
+
+    Returns
+    ----------
+    centers (mu) : array, [n_centers x n_features]
+    weights (alpha) : array, [n_centers, ] (alpha)
+    concentrations (kappa) : array, [n_centers, ]
+    """
+    n_examples, n_features = X.shape
+    n_clusters, n_examples = posterior.shape
+    weights = np.zeros((n_clusters,))
+    concentrations = np.zeros((n_clusters,))
+    centers = np.zeros((n_clusters, n_features))
+
+    for cc in range(n_clusters):
+        # update weights (alpha)
+        weights[cc] = np.mean(posterior[cc, :])
+
+        # update centers (mu)
+        X_scaled = X.copy()
+        if sp.issparse(X):
+            X_scaled.data *= posterior[cc, :].repeat(np.diff(X_scaled.indptr))
+        else:
+            for ee in range(n_examples):
+                X_scaled[ee, :] *= posterior[cc, ee]
+
+        centers[cc, :] = X_scaled.sum(axis=0)
+
+        # normalize centers
+        center_norm = np.linalg.norm(centers[cc, :])
+        centers[cc, :] = centers[cc, :] / center_norm
+
+        # update concentration (kappa) [TODO: add other kappa approximations]
+        rbar = center_norm / (n_examples * weights[cc])
+        concentrations[cc] = rbar * n_features - np.power(rbar, 3.)
+        concentrations[cc] /= 1. - np.power(rbar, 2.)
+
+    return centers, weights, concentrations
 
 
 def _movMF(X, n_clusters, posterior_type='soft', max_iter=300, verbose=False,
@@ -313,39 +385,21 @@ def _movMF(X, n_clusters, posterior_type='soft', max_iter=300, verbose=False,
     # init concentrations (kappas)
     concentrations = np.ones((n_clusters,))
 
-    if n_features <= 50:  # works up to about 50 before numrically unstable
-        vmf_f = _vmf
-    else:
-        vmf_f = _vmf_log
-
     if verbose:
         print("Initialization complete")
 
     for iter in range(max_iter):
         centers_prev = centers.copy()
 
-        # (expectation)
+        # expectation step
+        posterior = _expectation(X,
+                                centers,
+                                weights,
+                                concentrations,
+                                posterior_type=posterior_type)
 
-        f_log = np.zeros((n_clusters, n_examples))
-        for cc in range(n_clusters):
-            f_log[cc, :] = vmf_f(X, concentrations[cc], centers[cc, :])
-
-        posterior = np.zeros((n_clusters, n_examples))
-        if posterior_type == 'soft':
-            weights_log = np.log(weights)
-            posterior = np.tile(weights_log.T, (n_examples, 1)).T + f_log
-            for ee in range(n_examples):
-                posterior[:, ee] = np.exp(
-                        posterior[:, ee] - logsumexp(posterior[:, ee]))
-
-        elif posterior_type == 'hard':
-            weights_log = np.log(weights)
-            weighted_f_log = np.tile(weights_log.T, (n_examples, 1)).T + f_log
-            for ee in range(n_examples):
-                posterior[np.argmax(weighted_f_log[:, ee]), ee] = 1.0
-
-        # (maximization)
-        centers, weights, concentrations = _update_params(X, posterior)
+        # maximization step
+        centers, weights, concentrations = _maximization(X, posterior)
 
         # check convergence
         tolcheck = squared_norm(centers_prev - centers)
