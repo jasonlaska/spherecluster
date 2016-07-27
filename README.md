@@ -106,8 +106,10 @@ Other notes of interest:
 
 
 # Other implementations
-- ["movMF in R"](https://cran.r-project.org/web/packages/movMF/index.html)
+- [movMF in R](https://cran.r-project.org/web/packages/movMF/index.html)
 
-- ["Mixture of von Mises Fisher clustering in 3 dimensions (part of NIPY)"](http://nipy.sourceforge.net/nipy/devel/api/generated/nipy.algorithms.clustering.von_mises_fisher_mixture.html)
+- [movMF in python for 3 dimensions (via NIPY)](http://nipy.sourceforge.net/nipy/devel/api/generated/nipy.algorithms.clustering.von_mises_fisher_mixture.html)
+
+- [movMF in C](https://github.com/mrouvier/movMF)
 
 
