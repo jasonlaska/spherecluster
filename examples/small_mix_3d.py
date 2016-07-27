@@ -1,5 +1,6 @@
 import numpy as np
 from matplotlib import pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 from sklearn.cluster import KMeans
 from sklearn import metrics
 
@@ -21,21 +22,24 @@ Provides a basic smell test that the algoriths are performing as intended.
 
 ###############################################################################
 # Generate small-mix dataset
-mu_0 = np.array([-0.251, -0.968])
-mu_1 = np.array([0.399, 0.917])
+mu_0 = np.array([-0.251, -0.968, -0.105])
+mu_0 = mu_0 / np.linalg.norm(mu_0)
+mu_1 = np.array([0.399, 0.917, 0.713])
+mu_1 = mu_1 / np.linalg.norm(mu_1)
 mus = [mu_0, mu_1]
 kappa_0 = 8 # concentration parameter
 kappa_1 = 0.5 # concentration parameter
 kappas = [kappa_0, kappa_1]
-num_points_per_class = 300
+num_points_per_class = 500
 
 X_0 = sample_vMF.vMF(mu_0, kappa_0, num_points_per_class)
 X_1 = sample_vMF.vMF(mu_1, kappa_1, num_points_per_class)
-X = np.zeros((2 * num_points_per_class, 2))
+X = np.zeros((2 * num_points_per_class, 3))
 X[:num_points_per_class, :] = X_0
 X[num_points_per_class:, :] = X_1
 labels = np.zeros((2 * num_points_per_class, ))
 labels[num_points_per_class:] = 1
+
 
 ###############################################################################
 # K-Means clustering
@@ -110,29 +114,29 @@ vmf_hard_mu_1_error = np.linalg.norm(
 ###############################################################################
 # Show results
 
-plt.figure()
-
 # Original data
-ax = plt.subplot(1, 5, 1, aspect='equal', adjustable='box-forced',
-        xlim=[-1.1, 1.1], ylim=[-1.1, 1.1])
-for ex in X_0:
-    plt.plot(ex[0], ex[1], 'r+')
-    plt.hold(True)
-for ex in X_1:
-    plt.plot(ex[0], ex[1], 'b+')
-    plt.hold(True)
+fig = plt.figure(figsize=(8, 6))
+ax = fig.add_subplot(3, 2, 1, aspect='equal', projection='3d',
+        adjustable='box-forced', xlim=[-1.1, 1.1], ylim=[-1.1, 1.1],
+        zlim=[-1.1, 1.1])
+ax.scatter(X_1[:, 0], X_1[:, 1], X_1[:, 2], c='b')
+ax.hold(True)
+ax.scatter(X_0[:, 0], X_0[:, 1], X_0[:, 2], c='r')
 ax.set_aspect('equal')
 plt.title('Original data')
 plt.show()
 
 # K-means labels
-ax = plt.subplot(1, 5, 2, aspect='equal', adjustable='box-forced',
-        xlim=[-1.1, 1.1], ylim=[-1.1, 1.1])
+ax = fig.add_subplot(3, 2, 3, aspect='equal', projection='3d',
+        adjustable='box-forced', xlim=[-1.1, 1.1], ylim=[-1.1, 1.1],
+        zlim=[-1.1, 1.1])
 for ex, label in zip(X, km.labels_):
     if label == km_mu_0_idx:
-        plt.plot(ex[0], ex[1], 'r+')
+        color = 'r'
     else:
-        plt.plot(ex[0], ex[1], 'b+')
+        color = 'b'
+
+    ax.scatter(ex[0], ex[1], ex[2], c=color)
     plt.hold(True)
 
 ax.set_aspect('equal')
@@ -140,13 +144,16 @@ plt.title('K-means clustering')
 plt.show()
 
 # Spherical K-means labels
-ax = plt.subplot(1, 5, 3, aspect='equal', adjustable='box-forced',
-        xlim=[-1.1, 1.1], ylim=[-1.1, 1.1])
+ax = fig.add_subplot(3, 2, 4, aspect='equal', projection='3d',
+        adjustable='box-forced', xlim=[-1.1, 1.1], ylim=[-1.1, 1.1],
+        zlim=[-1.1, 1.1])
 for ex, label in zip(X, skm.labels_):
     if label == skm_mu_0_idx:
-        plt.plot(ex[0], ex[1], 'r+')
+        color = 'r'
     else:
-        plt.plot(ex[0], ex[1], 'b+')
+        color = 'b'
+
+    ax.scatter(ex[0], ex[1], ex[2], c=color)
     plt.hold(True)
 
 ax.set_aspect('equal')
@@ -154,13 +161,16 @@ plt.title('Spherical K-means clustering')
 plt.show()
 
 # von Mises Fisher soft labels
-ax = plt.subplot(1, 5, 4, aspect='equal', adjustable='box-forced',
-        xlim=[-1.1, 1.1], ylim=[-1.1, 1.1])
+ax = fig.add_subplot(3, 2, 5, aspect='equal', projection='3d',
+        adjustable='box-forced', xlim=[-1.1, 1.1], ylim=[-1.1, 1.1],
+        zlim=[-1.1, 1.1])
 for ex, label in zip(X, vmf_soft.labels_):
     if label == vmf_soft_mu_0_idx:
-        plt.plot(ex[0], ex[1], 'r+')
+        color = 'r'
     else:
-        plt.plot(ex[0], ex[1], 'b+')
+        color = 'b'
+
+    ax.scatter(ex[0], ex[1], ex[2], c=color)
     plt.hold(True)
 
 ax.set_aspect('equal')
@@ -168,13 +178,16 @@ plt.title('soft-movMF clustering')
 plt.show()
 
 # von Mises Fisher hard labels
-ax = plt.subplot(1, 5, 5, aspect='equal', adjustable='box-forced',
-        xlim=[-1.1, 1.1], ylim=[-1.1, 1.1])
+ax = fig.add_subplot(3, 2, 6, aspect='equal', projection='3d',
+        adjustable='box-forced', xlim=[-1.1, 1.1], ylim=[-1.1, 1.1],
+        zlim=[-1.1, 1.1])
 for ex, label in zip(X, vmf_hard.labels_):
     if label == vmf_hard_mu_0_idx:
-        plt.plot(ex[0], ex[1], 'r+')
+        color = 'r'
     else:
-        plt.plot(ex[0], ex[1], 'b+')
+        color = 'b'
+
+    ax.scatter(ex[0], ex[1], ex[2], c=color)
     plt.hold(True)
 
 ax.set_aspect('equal')

@@ -464,6 +464,8 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
       https://cran.r-project.org/web/packages/movMF/vignettes/movMF.pdf
       https://cran.r-project.org/web/packages/movMF/index.html
 
+    Basic sklearn scaffolding from sklearn.cluster.KMeans.
+
     Parameters
     ----------
 
