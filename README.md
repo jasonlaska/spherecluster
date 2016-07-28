@@ -5,7 +5,7 @@
 ## Algorithms
 This package implements the three algorithms outlined in ["Clustering on the Unit Hypersphere using von Mises-Fisher Distributions"](http://www.jmlr.org/papers/volume6/banerjee05a/banerjee05a.pdf), Banerjee et al., JMLR 2005, for scikit-learn.
 
-1. Spherical K-means
+1. Spherical K-means (spkmeans)
 
     Spherical K-means differs from conventional K-means in that it projects the estimated cluster centroids onto the the unit sphere at the end of each maximization step (i.e., normalizes the centroids).
 
@@ -27,6 +27,15 @@ This package implements the three algorithms outlined in ["Clustering on the Uni
 
     Label assigment is achieved by computing the argmax of the posterior for each example.
 
+3. Relationship between spkmeans and movMF
+
+    Spherical k-means is a special case of both movMF algorithms.
+
+    If for each cluster we enforce all of the weights to be equal `$\alpha_i = 1/n_clusters$` and all concentrations to be equal and infinite `$\kappa_i \rightarrow \infty$`, then the soft-movMF assigns points to the nearest cluster in the cosine distance in each iteration, leading to spkmeans.
+
+    Similarly, If for each cluster we enforce all of the weights to be equal and all concentrations to be equal (for any value), then the hard-movMF algorithm behaves as spkmeans.
+
+    The implementation in this package allows for manual control over the cluster wieghts, if desired.
 
 ## Other goodies
 
@@ -75,7 +84,7 @@ The full set of parameters for the `VonMisesFisherMixture` class can be found he
 
 - X can be a dense `numpy.array` or a sparse `scipy.sparse.csr_matrix`
 
-- This has been tested with sparse documents as large as `n_features = 43256` but may encounter numerical instability when `n_features` is very large
+- `VonMisesFisherMixture` has been tested with sparse documents of dimension `n_features = 43256`. When `n_features` is very large the algorithm may encounter numerical instability.  This will likely be due to the scaling factor of the log-vMF distribution.
 
 - `cluster_centers_` in `VonMisesFisherMixture` are dense vectors in current implementation
 
