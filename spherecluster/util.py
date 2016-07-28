@@ -51,9 +51,6 @@ def sample_weight(kappa, dim):
 
 def _orthonormal_to(mu):
     """Sample point on sphere orthogonal to mu.
-
-    This implementation is like one iteration of gram-schmidt
-    between mu and a random vector.
     """
     v = np.random.randn(mu.shape[0])
     proj_mu_v = mu * np.dot(mu, v) / np.linalg.norm(mu)
