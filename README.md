@@ -116,6 +116,7 @@ Spherical k-means, which is a simple low-cost modification to the standard k-mea
 
         Find more at:
         [https://cran.r-project.org/web/packages/movMF/index.html](https://cran.r-project.org/web/packages/movMF/index.html)
+
         [Additional references on approximations](https://cran.r-project.org/web/packages/movMF/movMF.pdf)
 
 

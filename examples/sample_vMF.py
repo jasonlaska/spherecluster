@@ -25,8 +25,8 @@ def weight_rejection_sampling(kappa, dim, num_samples):
     samples = []
     for nn in range(num_samples):
         while True:
-            z = np.random.uniform(low=0, high=1)
-            w = (1 - (1 + b) * z) / (1 - (1 - b) * z)
+            z = np.random.beta(dim / 2., dim / 2.)
+            w = (1. - (1. + b) * z) / (1. - (1. - b) * z)
             u = np.random.uniform(low=0, high=1)
             if kappa * w + dim * np.log(1 - x * w) - c >= np.log(u):
                 samples.append(w)
@@ -43,7 +43,7 @@ def sample_tangent_unit(mu):
 
     U, _, _ = np.linalg.svd(mat)
     nu = np.matrix(np.random.randn(mat.shape[0])).T
-    x = np.dot(U[:,1:], nu[1:,:])
+    x = np.dot(U[:, 1:], nu[1:, :])
     return np.squeeze(np.array(x / np.linalg.norm(x)))
 
 
@@ -60,9 +60,6 @@ def vMF(mu, kappa, num_samples):
         v = sample_tangent_unit(mu)
 
         # compute new point
-        new_point = v * np.sqrt(1 - ws[nn]**2) + ws[nn] * mu
-
-        # collect result
-        result[nn, :] = new_point
+        result[nn, :] = v * np.sqrt(1 - ws[nn]**2) + ws[nn] * mu
 
     return result

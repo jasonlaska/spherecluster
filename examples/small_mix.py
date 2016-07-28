@@ -25,9 +25,9 @@ mu_0 = np.array([-0.251, -0.968])
 mu_1 = np.array([0.399, 0.917])
 mus = [mu_0, mu_1]
 kappa_0 = 8 # concentration parameter
-kappa_1 = 0.5 # concentration parameter
+kappa_1 = 2 # concentration parameter
 kappas = [kappa_0, kappa_1]
-num_points_per_class = 300
+num_points_per_class = 100
 
 X_0 = sample_vMF.vMF(mu_0, kappa_0, num_points_per_class)
 X_1 = sample_vMF.vMF(mu_1, kappa_1, num_points_per_class)
