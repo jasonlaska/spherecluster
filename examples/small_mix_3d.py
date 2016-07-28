@@ -7,9 +7,9 @@ from sklearn import metrics
 import sys
 sys.path.append('../spherecluster')
 
-import sample_vMF
 from spherecluster import SphericalKMeans
 from spherecluster import VonMisesFisherMixture
+from spherecluster import sample_vMF
 
 plt.ion()
 
@@ -27,8 +27,8 @@ kappa_1 = 2 # concentration parameter
 kappas = [kappa_0, kappa_1]
 num_points_per_class = 300
 
-X_0 = sample_vMF.vMF(mu_0, kappa_0, num_points_per_class)
-X_1 = sample_vMF.vMF(mu_1, kappa_1, num_points_per_class)
+X_0 = sample_vMF(mu_0, kappa_0, num_points_per_class)
+X_1 = sample_vMF(mu_1, kappa_1, num_points_per_class)
 X = np.zeros((2 * num_points_per_class, 3))
 X[:num_points_per_class, :] = X_0
 X[num_points_per_class:, :] = X_1

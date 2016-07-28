@@ -3,7 +3,10 @@ from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import seaborn
 
-import sample_vMF
+import sys
+sys.path.append('../spherecluster')
+
+from spherecluster import sample_vMF
 
 plt.ion()
 
@@ -16,7 +19,7 @@ num_points_per_class = 250
 
 Xs = []
 for nn in range(n_clusters):
-  new_X = sample_vMF.vMF(mus[nn], kappas[nn], num_points_per_class)
+  new_X = sample_vMF(mus[nn], kappas[nn], num_points_per_class)
   Xs.append(new_X.T)
 
 

@@ -13,6 +13,25 @@ Sampling from vMF on S^2:
 import numpy as np
 
 
+def sample_vMF(mu, kappa, num_samples):
+    """Generate num_samples N-dimensional samples from von Mises Fisher
+    distribution around center mu \in R^N with concentration kappa.
+    """
+    dim = len(mu)
+    result = np.zeros((num_samples, dim))
+    for nn in range(num_samples):
+        # sample offset from center (on sphere) with spread kappa
+        w = sample_weight(kappa, dim)
+
+        # sample a point v on the unit sphere that's orthogonal to mu
+        v = _orthonormal_to(mu)
+
+        # compute new point
+        result[nn, :] = v * np.sqrt(1. - w**2) + w * mu
+
+    return result
+
+
 def sample_weight(kappa, dim):
     """Rejection sampling scheme for sampling distance from center on
     surface of the sphere.
@@ -41,21 +60,3 @@ def _orthonormal_to(mu):
     orthto = v - proj_mu_v
     return orthto / np.linalg.norm(orthto)
 
-
-def vMF(mu, kappa, num_samples):
-    """Generate num_samples N-dimensional samples from von Mises Fisher
-    distribution around center mu \in R^N with concentration kappa.
-    """
-    dim = len(mu)
-    result = np.zeros((num_samples, dim))
-    for nn in range(num_samples):
-        # sample offset from center (on sphere) with spread kappa
-        w = sample_weight(kappa, dim)
-
-        # sample a point v on the unit sphere that's orthogonal to mu
-        v = _orthonormal_to(mu)
-
-        # compute new point
-        result[nn, :] = v * np.sqrt(1. - w**2) + w * mu
-
-    return result
