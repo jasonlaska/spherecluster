@@ -21,10 +21,10 @@ def sample_vMF(mu, kappa, num_samples):
     result = np.zeros((num_samples, dim))
     for nn in range(num_samples):
         # sample offset from center (on sphere) with spread kappa
-        w = sample_weight(kappa, dim)
+        w = _sample_weight(kappa, dim)
 
         # sample a point v on the unit sphere that's orthogonal to mu
-        v = _orthonormal_to(mu)
+        v = _sample_orthonormal_to(mu)
 
         # compute new point
         result[nn, :] = v * np.sqrt(1. - w**2) + w * mu
@@ -32,7 +32,7 @@ def sample_vMF(mu, kappa, num_samples):
     return result
 
 
-def sample_weight(kappa, dim):
+def _sample_weight(kappa, dim):
     """Rejection sampling scheme for sampling distance from center on
     surface of the sphere.
     """
@@ -49,7 +49,7 @@ def sample_weight(kappa, dim):
             return w
 
 
-def _orthonormal_to(mu):
+def _sample_orthonormal_to(mu):
     """Sample point on sphere orthogonal to mu.
     """
     v = np.random.randn(mu.shape[0])
