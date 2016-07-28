@@ -11,7 +11,7 @@ This package implements the three algorithms outlined in ["Clustering on the Uni
 
 2. Mixtures of von Mises Fisher distributions (movMF)
 
-    Much like the Gaussian distribution is parameterized by mean and variance, the [von Mises Fisher distribution](https://en.wikipedia.org/wiki/Von_Mises%E2%80%93Fisher_distribution) has a _mean direction_ `$\mu$` and a _concentration parameter_ `$\kappa$`. Each point `$x_i$` drawn from the vMF distribution lives on surface of the unit hypersphere `$\S^{N-1}$` (i.e., `$\|x_i\|_2 = 1$`) as does the mean direction `$\|\mu\|_2 = 1$`.
+    Much like the Gaussian distribution is parameterized by mean and variance, the [von Mises Fisher distribution](https://en.wikipedia.org/wiki/Von_Mises%E2%80%93Fisher_distribution) has a _mean direction_ `$\mu$` and a _concentration parameter_ `$\kappa$`. Each point `$x_i$` drawn from the vMF distribution lives on the surface of the unit hypersphere `$\S^{N-1}$` (i.e., `$\|x_i\|_2 = 1$`) as does the mean direction `$\|\mu\|_2 = 1$`.
 
     If we model our data as a [mixture](https://en.wikipedia.org/wiki/Mixture_model) of von Mises Fisher distributions, we have an additional _weight_ parameter `$\alpha$` for each distribution in the mixture, and can cluster our data accordingly.
 
