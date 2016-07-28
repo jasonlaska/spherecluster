@@ -116,6 +116,7 @@ Spherical k-means, which is a simple low-cost modification to the standard k-mea
     - ["movMF: An R Package for Fitting Mixtures of von Mises-Fisher Distributions"](https://cran.r-project.org/web/packages/movMF/vignettes/movMF.pdf), K. Hornik and B.  Grün, Journal of Statistical Software, 2014.
 
         Find more at:
+
         [https://cran.r-project.org/web/packages/movMF/index.html](https://cran.r-project.org/web/packages/movMF/index.html)
 
         [Additional references on approximations](https://cran.r-project.org/web/packages/movMF/movMF.pdf)
