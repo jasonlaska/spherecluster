@@ -29,13 +29,13 @@ This package implements the three algorithms outlined in ["Clustering on the Uni
 
 ## Relationship between spkmeans and movMF
 
-    Spherical k-means is a special case of both movMF algorithms.
+Spherical k-means is a special case of both movMF algorithms.
 
-    If for each cluster we enforce all of the weights to be equal `$\alpha_i = 1/n_clusters$` and all concentrations to be equal and infinite `$\kappa_i \rightarrow \infty$`, then the soft-movMF assigns points to the nearest cluster in the cosine distance in each iteration, leading to spkmeans.
+If for each cluster we enforce all of the weights to be equal `$\alpha_i = 1/n_clusters$` and all concentrations to be equal and infinite `$\kappa_i \rightarrow \infty$`, then the soft-movMF assigns points to the nearest cluster in the cosine distance in each iteration, leading to spkmeans.
 
-    Similarly, If for each cluster we enforce all of the weights to be equal and all concentrations to be equal (for any value), then the hard-movMF algorithm behaves as spkmeans.
+Similarly, If for each cluster we enforce all of the weights to be equal and all concentrations to be equal (for any value), then the hard-movMF algorithm behaves as spkmeans.
 
-    The implementation in this package allows for manual control over the cluster wieghts, if desired.
+The implementation in this package allows for manual control over the cluster wieghts, if desired.
 
 ## Other goodies
 
