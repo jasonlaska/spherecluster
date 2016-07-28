@@ -30,7 +30,7 @@ This package implements the three algorithms outlined in ["Clustering on the Uni
 
 ## Other goodies
 
-- [Utility for sampling from a multivariate von Mises Fisher distribution](https://github.com/clara-labs/spherecluster/blob/develop/examples/sample_vMF.py)
+- Utility for sampling from a multivariate von Mises Fisher distribution in `spherecluster/util.py`.
 
 
 ## Usage
@@ -69,7 +69,7 @@ Both `SphericalKMeans` and `VonMisesFisherMixture` are standard sklearn estimato
     # vmf_hard.concentrations_
     # vmf_hard.intertia_
 
-The full set of parameters for the `VonMisesFisherMixture` class can be found here: [https://github.com/clara-labs/spherecluster/blob/develop/spherecluster/von_mises_fisher_mixture.py#L529](https://github.com/clara-labs/spherecluster/blob/develop/spherecluster/von_mises_fisher_mixture.py#L529)
+The full set of parameters for the `VonMisesFisherMixture` class can be found here in the doc string for the class (`help(VonMisesFisherMixture)`).
 
 Other notes:
 
