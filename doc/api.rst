@@ -1,4 +1,0 @@
-API Documentation
-=================
-
-* :doc:`template`
