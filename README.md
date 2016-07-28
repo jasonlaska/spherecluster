@@ -9,7 +9,7 @@ This package implements the three algorithms outlined in ["Clustering on the Uni
 
     Spherical K-means differs from conventional K-means in that it projects the estimated cluster centroids onto the the unit sphere at the end of each maximization step (i.e., normalizes the centroids).
 
-2. Mixtures of von Mises Fisher distributions (movMF)
+2. Mixture of von Mises Fisher distributions (movMF)
 
     Much like the Gaussian distribution is parameterized by mean and variance, the [von Mises Fisher distribution](https://en.wikipedia.org/wiki/Von_Mises%E2%80%93Fisher_distribution) has a _mean direction_ `$\mu$` and a _concentration parameter_ `$\kappa$`. Each point `$x_i$` drawn from the vMF distribution lives on the surface of the unit hypersphere `$\S^{N-1}$` (i.e., `$\|x_i\|_2 = 1$`) as does the mean direction `$\|\mu\|_2 = 1$`.  Larger `$\kappa$` leads to a more concentrated cluster of points.
 
