@@ -47,7 +47,6 @@ Both `SphericalKMeans` and `VonMisesFisherMixture` are standard sklearn estimato
     # skm.labels_
     # skm.intertia_
 
-
     # movMF-soft
     from spherecluster import VonMisesFisherMixture
     vmf_soft = VonMisesFisherMixture(n_clusters=K, posterior_type='soft')
@@ -58,7 +57,6 @@ Both `SphericalKMeans` and `VonMisesFisherMixture` are standard sklearn estimato
     # vmf_soft.weights_
     # vmf_soft.concentrations_
     # vmf_soft.intertia_
-
 
     # movMF-hard
     from spherecluster import VonMisesFisherMixture
