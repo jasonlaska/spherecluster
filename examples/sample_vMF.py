@@ -19,7 +19,7 @@ def sample_weight(kappa, dim):
     """
     dim = dim - 1 # since S^{n-1}
     b = dim / (np.sqrt(4. * kappa**2 + dim**2) + 2 * kappa)
-    x = (1 - b) / (1 + b)
+    x = (1. - b) / (1. + b)
     c = kappa * x + dim * np.log(1 - x**2)
 
     while True:

@@ -30,8 +30,8 @@ This package implements the three algorithms outlined in ["Clustering on the Uni
 
 ## Other goodies
 
-- utility sampling from a multivariate von Mises Fisher distribution
-- python implementation of approximation to the modified Bessel function of the first kind
+- [Utility for sampling from a multivariate von Mises Fisher distribution](https://github.com/clara-labs/spherecluster/blob/develop/examples/sample_vMF.py)
+
 
 ## Usage
 Both `SphericalKMeans` and `VonMisesFisherMixture` are standard sklearn estimators and mirror the parameter names for `sklearn.cluster.kmeans`.
@@ -110,7 +110,7 @@ Spherical k-means, which is a simple low-cost modification to the standard k-mea
 
     - ["A short note on parameter approximation for von Mises-Fisher distributions"](http://www.kyb.mpg.de/fileadmin/user_upload/files/publications/attachments/vmfnote_7045%5b0%5d.pdf), S. Sra.
 
-- For large values of $\eta$ and $\kappa$ we compute the log-vMF density via approximations found in:
+- For large values of `$\eta$` and `$\kappa$` we compute the log-vMF density via approximations found in:
 
     - ["movMF: An R Package for Fitting Mixtures of von Mises-Fisher Distributions"](https://cran.r-project.org/web/packages/movMF/vignettes/movMF.pdf), K. Hornik and B.  Grün, Journal of Statistical Software, 2014.
 
