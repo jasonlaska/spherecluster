@@ -136,11 +136,12 @@ Spherical k-means, which is a simple low-cost modification to the standard k-mea
 - Spherical K-Means is a trivial modification to scikit-learn's [sklearn.cluster.KMeans](http://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html) and borrows heavily from that package.
 
 
-## Other implementations
+## See also
 - [movMF in R](https://cran.r-project.org/web/packages/movMF/index.html)
 
 - [movMF in python for 3 dimensions (via NIPY)](http://nipy.sourceforge.net/nipy/devel/api/generated/nipy.algorithms.clustering.von_mises_fisher_mixture.html)
 
 - [movMF in C](https://github.com/mrouvier/movMF)
 
+- [sklearn GMM](http://scikit-learn.org/stable/modules/mixture.html)
 
