@@ -121,6 +121,8 @@ Spherical k-means, which is a simple low-cost modification to the standard k-mea
 
     - ["A short note on parameter approximation for von Mises-Fisher distributions"](http://www.kyb.mpg.de/fileadmin/user_upload/files/publications/attachments/vmfnote_7045%5b0%5d.pdf), S. Sra.
 
+## Attribution
+
 - For large values of `$\eta$` and `$\kappa$` we compute the log-vMF density via approximations found in:
 
     - ["movMF: An R Package for Fitting Mixtures of von Mises-Fisher Distributions"](https://cran.r-project.org/web/packages/movMF/vignettes/movMF.pdf), K. Hornik and B.  Grün, Journal of Statistical Software, 2014.
