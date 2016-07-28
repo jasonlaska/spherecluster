@@ -50,7 +50,7 @@ def _spherical_kmeans_single_lloyd(X, n_clusters, max_iter=300,
         # labels assignment
         # TODO: _labels_inertia should be done with cosine distance
         #       since ||a - b|| = 2(1 - cos(a,b)) when a,b are unit normalized
-        #       this doesn't really matter, except for reported inertia.
+        #       this doesn't really matter.
         labels, inertia = \
             _labels_inertia(X, x_squared_norms, centers,
                             precompute_distances=precompute_distances,
