@@ -86,10 +86,6 @@ def _vmf_normalize(kappa, dim):
     return num / denom
 
 
-def _beta_SS(nu):
-    return np.sqrt((nu + 0.5)**2)
-
-
 def _log_H_asymptotic(nu, kappa):
     """Compute the Amos-type upper bound asymptotic approximation on H where
     log(H_\nu)(\kappa) = \int_0^\kappa R_\nu(t) dt.
@@ -97,7 +93,7 @@ def _log_H_asymptotic(nu, kappa):
     See "lH_asymptotic <-" in movMF.R and utility function implementation notes
     from https://cran.r-project.org/web/packages/movMF/index.html
     """
-    beta = _beta_SS(nu)
+    beta = np.sqrt((nu + 0.5)**2)
     kappa_l = np.min([kappa, np.sqrt((3. * nu + 11. / 2.) * (nu + 3. / 2.))])
     return _S(kappa, nu + 0.5, beta) +\
             (_S(kappa_l, nu, nu + 2.) - _S(kappa_l, nu + 0.5, beta))
