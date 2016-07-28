@@ -27,7 +27,7 @@ This package implements the three algorithms outlined in ["Clustering on the Uni
 
     Label assigment is achieved by computing the argmax of the posterior for each example.
 
-3. Relationship between spkmeans and movMF
+## Relationship between spkmeans and movMF
 
     Spherical k-means is a special case of both movMF algorithms.
 
