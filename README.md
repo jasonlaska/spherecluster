@@ -13,11 +13,11 @@ This package implements the three algorithms outlined in ["Clustering on the Uni
 
     Much like the Gaussian distribution is parameterized by mean and variance, the [von Mises Fisher distribution](https://en.wikipedia.org/wiki/Von_Mises%E2%80%93Fisher_distribution) has a _mean direction_ `$\mu$` and a _concentration parameter_ `$\kappa$`. Each point `$x_i$` drawn from the vMF distribution lives on the surface of the unit hypersphere `$\S^{N-1}$` (i.e., `$\|x_i\|_2 = 1$`) as does the mean direction `$\|\mu\|_2 = 1$`.  Larger `$\kappa$` leads to a more concentrated cluster of points.
 
-    If we model our data as a [mixture](https://en.wikipedia.org/wiki/Mixture_model) of von Mises Fisher distributions, we have an additional _weight_ parameter `$\alpha$` for each distribution in the mixture. We can estimate the mixture parameters via expectation-maximization (EM) and cluster our data accordingly.
+    If we model our data as a [mixture](https://en.wikipedia.org/wiki/Mixture_model) of von Mises Fisher distributions, we have an additional _weight_ parameter `$\alpha$` for each distribution in the mixture. The movMF algorithms estimate the mixture parameters via expectation-maximization (EM) enabling us to cluster data accordingly.
 
     - soft-movMF
 
-        Estimates the real-valued posterior on each example for each class.
+        Estimates the real-valued posterior on each example for each class.  This enables a _soft clustering_ in the sense that we have a probability of cluster membership for each data point.
 
     - hard-movMF
 
