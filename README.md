@@ -93,7 +93,7 @@ It is clear from the figures that the movMF algorithms do a better job by taking
 
 
 ## Document clustering
-We also reproduce [this scikit-learn k-means demo](http://scikit-learn.org/stable/auto_examples/text/document_clustering.html) in `examples/document_clustering.py`.  The results are different on each run, here's a chart comparing the algorithms' performances for a sample run:
+We also reproduce [this scikit-learn tfidf (w optional lsa) + k-means demo](http://scikit-learn.org/stable/auto_examples/text/document_clustering.html) in `examples/document_clustering.py`.  The results are different on each run, here's a chart comparing the algorithms' performances for a sample run:
 
 <img src="images/document_clustering.png" alt="Document clustering" width="800">
 
