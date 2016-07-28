@@ -131,6 +131,8 @@ Spherical k-means, which is a simple low-cost modification to the standard k-mea
 
         [Additional references on approximations](https://cran.r-project.org/web/packages/movMF/movMF.pdf)
 
+- Spherical K-Means is a trivial modification to scikit-learn's [sklearn.cluster.KMeans](http://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html) and borrows heavily from that package.
+
 
 ## Other implementations
 - [movMF in R](https://cran.r-project.org/web/packages/movMF/index.html)
