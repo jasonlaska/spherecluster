@@ -31,11 +31,10 @@ This package implements the three algorithms outlined in ["Clustering on the Uni
 
 Spherical k-means is a special case of both movMF algorithms.
 
-If for each cluster we enforce all of the weights to be equal `$\alpha_i = 1/n_clusters$` and all concentrations to be equal and infinite `$\kappa_i \rightarrow \infty$`, then the soft-movMF assigns points to the nearest cluster in the cosine distance in each iteration, leading to spkmeans.
+If for each cluster we enforce all of the weights to be equal `$\alpha_i = 1/n_clusters$` and all concentrations to be equal and infinite `$\kappa_i \rightarrow \infty$`, then soft-movMF behaves as spkmeans.
 
-Similarly, If for each cluster we enforce all of the weights to be equal and all concentrations to be equal (for any value), then the hard-movMF algorithm behaves as spkmeans.
+Similarly, if for each cluster we enforce all of the weights to be equal and all concentrations to be equal (with any value), then hard-movMF behaves as spkmeans.
 
-The implementation in this package allows for manual control over the cluster wieghts, if desired.
 
 ## Other goodies
 
@@ -87,6 +86,8 @@ The full set of parameters for the `VonMisesFisherMixture` class can be found he
 - `VonMisesFisherMixture` has been tested with sparse documents of dimension `n_features = 43256`. When `n_features` is very large the algorithm may encounter numerical instability.  This will likely be due to the scaling factor of the log-vMF distribution.
 
 - `cluster_centers_` in `VonMisesFisherMixture` are dense vectors in current implementation
+
+- Cluster weights can be manually controlled (overriden) instead of learned.
 
 # Examples
 
