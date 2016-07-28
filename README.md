@@ -31,9 +31,9 @@ This package implements the three algorithms outlined in ["Clustering on the Uni
 
 Spherical k-means is a special case of both movMF algorithms.
 
-If for each cluster we enforce all of the weights to be equal `$\alpha_i = 1/n_clusters$` and all concentrations to be equal and infinite `$\kappa_i \rightarrow \infty$`, then soft-movMF behaves as spkmeans.
+- If for each cluster we enforce all of the weights to be equal `$\alpha_i = 1/n_clusters$` and all concentrations to be equal and infinite `$\kappa_i \rightarrow \infty$`, then soft-movMF behaves as spkmeans.
 
-Similarly, if for each cluster we enforce all of the weights to be equal and all concentrations to be equal (with any value), then hard-movMF behaves as spkmeans.
+- Similarly, if for each cluster we enforce all of the weights to be equal and all concentrations to be equal (with any value), then hard-movMF behaves as spkmeans.
 
 
 ## Other goodies
