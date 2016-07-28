@@ -30,7 +30,7 @@ This package implements the three algorithms outlined in ["Clustering on the Uni
 
 ## Other goodies
 
-- Utility for sampling from a multivariate von Mises Fisher distribution in `spherecluster/util.py`.
+- A utility for sampling from a multivariate von Mises Fisher distribution in `spherecluster/util.py`.
 
 
 ## Usage
@@ -71,11 +71,12 @@ Both `SphericalKMeans` and `VonMisesFisherMixture` are standard sklearn estimato
 
 The full set of parameters for the `VonMisesFisherMixture` class can be found here in the doc string for the class (`help(VonMisesFisherMixture)`).
 
-Other notes:
+**Notes:**
 
-- `SphericalKMeans` projects each centroid onto the sphere at the end of each EM iteration and is therefore a small modification to `sklearn.cluster.kmeans`
 - X can be a dense `numpy.array` or a sparse `scipy.sparse.csr_matrix`
+
 - This has been tested with sparse documents as large as `n_features = 43256` but may encounter numerical instability when `n_features` is very large
+
 - `cluster_centers_` in `VonMisesFisherMixture` are dense vectors in current implementation
 
 # Examples
@@ -98,7 +99,7 @@ We also reproduce [this scikit-learn k-means demo](http://scikit-learn.org/stabl
 
 Spherical k-means, which is a simple low-cost modification to the standard k-means algorithm performs quite well on this example.
 
-# Acknowledgments
+# References
 
 - Primary reference on algorithms: ["Clustering on the Unit Hypersphere using von Mises-Fisher Distributions"](http://www.jmlr.org/papers/volume6/banerjee05a/banerjee05a.pdf).
 
