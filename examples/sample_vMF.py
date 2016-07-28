@@ -55,11 +55,9 @@ def vMF(mu, kappa, num_samples):
 
     result = np.zeros((num_samples, dim))
     for nn in range(num_samples):
-        # draw sample v uniformly over the unit hyper sphere
-        # and orthogonal to mu
         v = sample_tangent_unit(mu)
 
         # compute new point
-        result[nn, :] = v * np.sqrt(1 - ws[nn]**2) + ws[nn] * mu
+        result[nn, :] = v * np.sqrt(1. - ws[nn]**2) + ws[nn] * mu
 
     return result
