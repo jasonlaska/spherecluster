@@ -7,13 +7,13 @@ This package implements the three algorithms outlined in ["Clustering on the Uni
 
 1. Spherical K-means
 
-    Spherical K-means differs from conventional K-means in that it projects the estimated cluster centroids on the the unit sphere at the end of each maximization step (i.e., normalizes the centroids).
+    Spherical K-means differs from conventional K-means in that it projects the estimated cluster centroids onto the the unit sphere at the end of each maximization step (i.e., normalizes the centroids).
 
 2. Mixtures of von Mises Fisher distributions (movMF)
 
-    Much like the Gaussian distribution is parameterized by mean and variance, the [von Mises Fisher distribution](https://en.wikipedia.org/wiki/Von_Mises%E2%80%93Fisher_distribution) has a mean direction `$\mu$` and a concentration parameter `$\kappa$`. Points drawn from the vMF distribution live on surface of the unit hypersphere `$\S^{N-1}$` (i.e., each point `$x_i$` s.t. `$\|x_i\|_2 = 1$`).
+    Much like the Gaussian distribution is parameterized by mean and variance, the [von Mises Fisher distribution](https://en.wikipedia.org/wiki/Von_Mises%E2%80%93Fisher_distribution) has a _mean direction_ `$\mu$` and a _concentration parameter_ `$\kappa$`. Each point `$x_i$` drawn from the vMF distribution lives on surface of the unit hypersphere `$\S^{N-1}$` (i.e., `$\|x_i\|_2 = 1$`) as does the mean direction `$\|\mu\|_2 = 1$`.
 
-    If we model our data as a [mixture](https://en.wikipedia.org/wiki/Mixture_model) of von Mises Fisher Distributions, we have an additional `weight` parameter for each distribution in the mixture, and can cluster our data accordingly.
+    If we model our data as a [mixture](https://en.wikipedia.org/wiki/Mixture_model) of von Mises Fisher distributions, we have an additional _weight_ parameter `$\alpha$` for each distribution in the mixture, and can cluster our data accordingly.
 
     - soft-movMF
 
@@ -69,7 +69,7 @@ Both `SphericalKMeans` and `VonMisesFisherMixture` are standard sklearn estimato
     # vmf_hard.concentrations_
     # vmf_hard.intertia_
 
-The full set of parameters for the `VonMisesFisherMixture` class can be found here in the doc string for the class (`help(VonMisesFisherMixture)`).
+The full set of parameters for the `VonMisesFisherMixture` class can be found here in the doc string for the class; see `help(VonMisesFisherMixture)`.
 
 **Notes:**
 
