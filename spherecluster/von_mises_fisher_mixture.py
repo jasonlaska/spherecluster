@@ -26,6 +26,9 @@ from sklearn.externals.joblib import Parallel, delayed
 import spherical_kmeans
 
 
+MAX_CONTENTRATION = 1e10
+
+
 def _inertia_from_labels(X, centers, labels):
     """Compute interia with cosine distance using known labels.
     """
@@ -300,7 +303,10 @@ def _maximization(X, posterior, force_weights=None):
         # update concentration (kappa) [TODO: add other kappa approximations]
         rbar = center_norm / (n_examples * weights[cc])
         concentrations[cc] = rbar * n_features - np.power(rbar, 3.)
-        concentrations[cc] /= 1. - np.power(rbar, 2.)
+        if np.abs(rbar - 1.0) < 1e-10:
+            concentrations[cc] = MAX_CONTENTRATION
+        else:
+            concentrations[cc] /= 1. - np.power(rbar, 2.)
 
     return centers, weights, concentrations
 
