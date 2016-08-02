@@ -294,7 +294,8 @@ def _maximization(X, posterior, force_weights=None):
 
         # normalize centers
         center_norm = np.linalg.norm(centers[cc, :])
-        centers[cc, :] = centers[cc, :] / center_norm
+        if center_norm > 1e-8:
+            centers[cc, :] = centers[cc, :] / center_norm
 
         # update concentration (kappa) [TODO: add other kappa approximations]
         rbar = center_norm / (n_examples * weights[cc])
