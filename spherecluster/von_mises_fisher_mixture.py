@@ -164,9 +164,24 @@ def _init_unit_centers(X, n_clusters, random_state, init):
         spherical-k-means : use centroids from one pass of spherical k-means
         random : random unit norm vectors
         random-orthonormal : random orthonormal vectors
+        If an ndarray is passed, it should be of shape (n_clusters, n_features)
+        and gives the initial centers.
     """
     n_examples, n_features = np.shape(X)
-    if init == 'spherical-k-means':
+    if isinstance(init, np.ndarray):
+        print init.shape
+        n_init_clusters, n_init_features = init.shape
+        assert n_init_clusters == n_clusters
+        assert n_init_features == n_features
+
+        # ensure unit normed centers
+        centers = init
+        for cc in range(n_clusters):
+            centers[cc, :] = centers[cc, :] / np.linalg.norm(centers[cc, :])
+
+        return centers
+
+    elif init == 'spherical-k-means':
         labels, inertia, centers, iters =\
                 spherical_kmeans._spherical_kmeans_single_lloyd(
                     X,
@@ -365,6 +380,8 @@ def _movMF(X, n_clusters, posterior_type='soft', force_weights=None,
         spherical-k-means : use centroids from one pass of spherical k-means
         random : random unit norm vectors
         random-orthonormal : random orthonormal vectors
+        If an ndarray is passed, it should be of shape (n_clusters, n_features)
+        and gives the initial centers.
 
     tol : float, default: 1e-6
         Relative tolerance with regards to inertia to declare convergence
@@ -582,6 +599,8 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
         spherical-k-means : use centroids from one pass of spherical k-means
         random : random unit norm vectors
         random-orthonormal : random orthonormal vectors
+        If an ndarray is passed, it should be of shape (n_clusters, n_features)
+        and gives the initial centers.
 
     tol : float, default: 1e-6
         Relative tolerance with regards to inertia to declare convergence
