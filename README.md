@@ -83,11 +83,11 @@ The full set of parameters for the `VonMisesFisherMixture` class can be found he
 
 - X can be a dense `numpy.array` or a sparse `scipy.sparse.csr_matrix`
 
-- `VonMisesFisherMixture` has been tested with sparse documents of dimension `n_features = 43256`. When `n_features` is very large the algorithm may encounter numerical instability.  This will likely be due to the scaling factor of the log-vMF distribution.
+- `VonMisesFisherMixture` has been tested successfully with sparse documents of dimension `n_features = 43256`. When `n_features` is very large the algorithm may encounter numerical instability.  This will likely be due to the scaling factor of the log-vMF distribution.
 
 - `cluster_centers_` in `VonMisesFisherMixture` are dense vectors in current implementation
 
-- Cluster weights can be manually controlled (overriden) instead of learned.
+- Mixture weights can be manually controlled (overriden) instead of learned.
 
 # Examples
 
