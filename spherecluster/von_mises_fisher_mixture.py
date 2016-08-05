@@ -169,7 +169,6 @@ def _init_unit_centers(X, n_clusters, random_state, init):
     """
     n_examples, n_features = np.shape(X)
     if isinstance(init, np.ndarray):
-        print init.shape
         n_init_clusters, n_init_features = init.shape
         assert n_init_clusters == n_clusters
         assert n_init_features == n_features
