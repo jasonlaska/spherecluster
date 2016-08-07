@@ -322,6 +322,9 @@ def _maximization(X, posterior, force_weights=None):
         else:
             concentrations[cc] /= 1. - np.power(rbar, 2.)
 
+        # let python know we can free this (good for large dense X)
+        del X_scaled
+
     return centers, weights, concentrations
 
 
