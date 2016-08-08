@@ -89,6 +89,11 @@ The full set of parameters for the `VonMisesFisherMixture` class can be found he
 
 - Mixture weights can be manually controlled (overriden) instead of learned.
 
+# Testing
+From the base directory, run:
+
+    python -m pytest spherecluster/tests/
+
 # Examples
 
 ## Small mix

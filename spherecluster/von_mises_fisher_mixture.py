@@ -240,10 +240,11 @@ def _init_unit_centers(X, n_clusters, random_state, init):
         return q.T
 
     elif init == 'random-class':
-        labels = np.random.randint(0, n_clusters, n_examples)
         centers = np.zeros((n_clusters, n_features))
         for cc in range(n_clusters):
-            centers[cc, :] = X[labels == cc, :].sum(axis=0)
+            while np.linalg.norm(centers[cc, :]) == 0:
+                labels = np.random.randint(0, n_clusters, n_examples)
+                centers[cc, :] = X[labels == cc, :].sum(axis=0)
 
         for cc in range(n_clusters):
             centers[cc, :] = centers[cc, :] / np.linalg.norm(centers[cc, :])
@@ -521,6 +522,14 @@ def movMF(X, n_clusters, posterior_type='soft', force_weights=None, n_init=10,
                 % n_init, RuntimeWarning, stacklevel=2)
             n_init = 1
 
+    # defaults
+    best_centers = None
+    best_labels = None
+    best_weights = None
+    best_concentrations = None
+    best_posterior = None
+    best_inertia = None
+
     if n_jobs == 1:
         # For a single thread, less memory is needed if we just store one set
         # of the best results (as opposed to one set per run per thread).
@@ -549,7 +558,8 @@ def movMF(X, n_clusters, posterior_type='soft', force_weights=None, n_init=10,
         # parallelisation of movMF runs
         seeds = random_state.randint(np.iinfo(np.int32).max, size=n_init)
         results = Parallel(n_jobs=n_jobs, verbose=0)(
-            delayed(_movMF)(X,
+            delayed(_movMF)(
+                    X,
                     n_clusters,
                     posterior_type=posterior_type,
                     force_weights=force_weights,
@@ -567,6 +577,8 @@ def movMF(X, n_clusters, posterior_type='soft', force_weights=None, n_init=10,
         best_labels = labels[best]
         best_inertia = inertia[best]
         best_centers = centers[best]
+        best_concentrations = concentrations[best]
+        best_weights = weights[best]
 
     return (best_centers, best_labels, best_inertia, best_weights,
         best_concentrations, best_posterior)
@@ -684,7 +696,7 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
         If posterior_type='soft' is used, this matrix will be dense and the
         column values correspond to soft clustering weights.
     """
-    def __init__(self, n_clusters, posterior_type='soft', force_weights=None,
+    def __init__(self, n_clusters=5, posterior_type='soft', force_weights=None,
             n_init=10, n_jobs=1, max_iter=300, verbose=False,
             init='random-class', random_state=None, tol=1e-6, copy_x=True):
         self.n_clusters = n_clusters
@@ -721,9 +733,20 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
     def _check_fit_data(self, X):
         """Verify that the number of samples given is larger than k"""
         X = check_array(X, accept_sparse='csr', dtype=[np.float64, np.float32])
+        n_samples, n_features = X.shape
         if X.shape[0] < self.n_clusters:
             raise ValueError("n_samples=%d should be >= n_clusters=%d" % (
                 X.shape[0], self.n_clusters))
+
+        for ee in range(n_samples):
+            if sp.issparse(X):
+                n = sp.linalg.norm(X[ee, :])
+            else:
+                n = np.linalg.norm(X[ee, :])
+
+            if np.abs(n - 1.) > 1e-4:
+                raise ValueError("Data l2-norm must be 1")
+
         return X
 
 
@@ -736,6 +759,15 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
             raise ValueError("Incorrect number of features. "
                              "Got %d features, expected %d" % (
                                  n_features, expected_n_features))
+
+        for ee in range(n_samples):
+            if sp.issparse(X):
+                n = sp.linalg.norm(X[ee, :])
+            else:
+                n = np.linalg.norm(X[ee, :])
+
+            if np.abs(n - 1.) > 1e-4:
+                raise ValueError("Data l2-norm must be 1")
 
         return X
 
@@ -799,7 +831,6 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
             X transformed in the new space.
         """
         check_is_fitted(self, 'cluster_centers_')
-
         X = self._check_test_data(X)
         return self._transform(X)
 
@@ -853,6 +884,8 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
 
 
     def log_likelihood(self, X):
+        check_is_fitted(self, 'cluster_centers_')
+
         return _log_likelihood(
                 X,
                 self.cluster_centers_,
