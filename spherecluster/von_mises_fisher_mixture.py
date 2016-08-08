@@ -35,9 +35,9 @@ def _inertia_from_labels(X, centers, labels):
     n_examples, n_features = X.shape
     intertia = np.zeros((n_examples, ))
     for ee in range(n_examples):
-        intertia[ee] = X[ee, :].dot(centers[int(labels[ee]), :].T)
+        intertia[ee] = 1 - X[ee, :].dot(centers[int(labels[ee]), :].T)
 
-    return 1 - np.sum(intertia)
+    return np.sum(intertia)
 
 
 def _labels_inertia(X, centers):
@@ -52,12 +52,12 @@ def _labels_inertia(X, centers):
     for ee in range(n_examples):
         dists = np.zeros((n_clusters, ))
         for cc in range(n_clusters):
-            dists[cc] = X[ee, :].dot(centers[cc, :].T)
+            dists[cc] = 1 - X[ee, :].dot(centers[cc, :].T)
 
         labels[ee] = np.argmin(dists)
         intertia[ee] = dists[int(labels[ee])]
 
-    return labels, 1 - np.sum(intertia)
+    return labels, np.sum(intertia)
 
 
 def _vmf_log(X, kappa, mu):
@@ -141,6 +141,32 @@ def _vmf_log_asymptotic(X, kappa, mu):
     log_vfm = kappa * X.dot(mu).T +\
             -_log_H_asymptotic(n_features / 2. - 1., kappa)
     return log_vfm
+
+
+def _log_likelihood(X, centers, weights, concentrations):
+    if len(np.shape(X)) != 2:
+        X = X.reshape((1, len(X)))
+
+    n_examples, n_features = np.shape(X)
+    n_clusters, _ = centers.shape
+
+    if n_features <= 50:  # works up to about 50 before numrically unstable
+        vmf_f = _vmf_log
+    else:
+        vmf_f = _vmf_log_asymptotic
+
+    f_log = np.zeros((n_clusters, n_examples))
+    for cc in range(n_clusters):
+        f_log[cc, :] = vmf_f(X, concentrations[cc], centers[cc, :])
+
+    posterior = np.zeros((n_clusters, n_examples))
+    weights_log = np.log(weights)
+    posterior = np.tile(weights_log.T, (n_examples, 1)).T + f_log
+    for ee in range(n_examples):
+        posterior[:, ee] = np.exp(
+                posterior[:, ee] - logsumexp(posterior[:, ee]))
+
+    return posterior
 
 
 def _init_unit_centers(X, n_clusters, random_state, init):
@@ -824,4 +850,12 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
 
         X = self._check_test_data(X)
         return -_labels_inertia(X, self.cluster_centers_)[1]
+
+
+    def log_likelihood(self, X):
+        return _log_likelihood(
+                X,
+                self.cluster_centers_,
+                self.weights_,
+                self.concentrations_)
 
