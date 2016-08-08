@@ -151,7 +151,7 @@ table.append([
 ###############################################################################
 # Mixture of von Mises Fisher clustering (soft)
 vmf_soft = VonMisesFisherMixture(n_clusters=true_k, posterior_type='soft',
-    init='random-class', n_init=20, force_weights=np.ones((true_k,))/true_k)
+    init='random-class', n_init=20)
 
 print("Clustering with %s" % vmf_soft)
 vmf_soft.fit(X)
@@ -186,7 +186,7 @@ table.append([
 ###############################################################################
 # Mixture of von Mises Fisher clustering (hard)
 vmf_hard = VonMisesFisherMixture(n_clusters=true_k, posterior_type='hard',
-    init='random-class', n_init=20, force_weights=np.ones((true_k,))/true_k)
+    init='random-class', n_init=20)
 
 print("Clustering with %s" % vmf_hard)
 vmf_hard.fit(X)
