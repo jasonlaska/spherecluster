@@ -83,45 +83,6 @@ class TestVonMisesFisherMixture(object):
         assert_array_equal(breakage_points, [141, 420, 311, 3, 3])
 
 
-    def test_integration_multiple_jobs(self):
-        n_clusters = 5
-        n_examples = 20
-        n_features = 100
-        X = np.random.randn(n_examples, n_features)
-        for ee in range(n_examples):
-            X[ee, :] /= np.linalg.norm(X[ee, :])
-
-        movmf = VonMisesFisherMixture(
-                n_clusters=n_clusters,
-                posterior_type='soft',
-                n_jobs=2)
-        movmf.fit(X)
-
-        assert movmf.cluster_centers_.shape == (n_clusters, n_features)
-        assert len(movmf.concentrations_) == n_clusters
-        assert len(movmf.weights_) == n_clusters
-        assert len(movmf.labels_) == n_examples
-
-        for center in movmf.cluster_centers_:
-            assert_almost_equal(np.linalg.norm(center), 1.0)
-
-        for concentration in movmf.concentrations_:
-            assert concentration > 0
-
-        for weight in movmf.weights_:
-            assert not np.isnan(weight)
-
-        plabels = movmf.predict(X)
-        assert_array_equal(plabels, movmf.labels_)
-
-        ll = movmf.log_likelihood(X)
-        ll_labels = np.zeros(movmf.labels_.shape)
-        for ee in range(n_examples):
-            ll_labels[ee] = np.argmax(ll[:, ee])
-
-        assert_array_equal(ll_labels, movmf.labels_)
-
-
     @pytest.mark.parametrize("params_in", [
         {
             'posterior_type': 'soft',
