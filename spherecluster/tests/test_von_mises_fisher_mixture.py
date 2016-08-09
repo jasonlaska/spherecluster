@@ -4,6 +4,7 @@ import numpy as np
 from numpy.testing import assert_almost_equal, assert_array_equal
 from spherecluster import VonMisesFisherMixture
 from spherecluster import von_mises_fisher_mixture
+from spherecluster import sample_vMF
 
 
 class TestVonMisesFisherMixture(object):
@@ -81,6 +82,37 @@ class TestVonMisesFisherMixture(object):
 
         print breakage_points
         assert_array_equal(breakage_points, [141, 420, 311, 3, 3])
+
+
+    def test_maximization(self):
+        num_points = 5000
+        n_features = 500
+        posterior = np.ones((1, num_points))
+
+        kappas = [5000, 8000, 16400]
+        for kappa in kappas:
+            mu = np.random.randn(n_features)
+            mu /= np.linalg.norm(mu)
+
+            X = sample_vMF(mu, kappa, num_points)
+
+            centers, weights, concentrations = von_mises_fisher_mixture._maximization(
+                    X,
+                    posterior
+                )
+
+            print 'center estimate error', np.linalg.norm(centers[0, :] - mu)
+            print 'kappa estimate', np.abs(kappa - concentrations[0]) / kappa, kappa, concentrations[0]
+
+            assert_almost_equal(1., weights[0])
+            assert_almost_equal(
+                    0.0,
+                    np.abs(kappa - concentrations[0])/kappa,
+                    decimal=2)
+            assert_almost_equal(
+                    0.0,
+                    np.linalg.norm(centers[0, :] - mu),
+                    decimal=2)
 
 
     @pytest.mark.parametrize("params_in", [
