@@ -40,6 +40,14 @@ Spherical k-means is a special case of both movMF algorithms.
 
 - A utility for sampling from a multivariate von Mises Fisher distribution in `spherecluster/util.py`.
 
+## Installation
+Clone this repo and run
+
+    python setup.py install
+
+or via PyPI
+
+    pip install spherecluster
 
 ## Usage
 Both `SphericalKMeans` and `VonMisesFisherMixture` are standard sklearn estimators and mirror the parameter names for `sklearn.cluster.kmeans`.
@@ -89,7 +97,7 @@ The full set of parameters for the `VonMisesFisherMixture` class can be found he
 
 - Mixture weights can be manually controlled (overriden) instead of learned.
 
-# Testing
+## Testing
 From the base directory, run:
 
     python -m pytest spherecluster/tests/
