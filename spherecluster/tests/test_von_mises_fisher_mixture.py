@@ -1,3 +1,4 @@
+import pytest
 import scipy as sp
 import numpy as np
 from numpy.testing import assert_almost_equal, assert_array_equal
@@ -43,6 +44,11 @@ class TestVonMisesFisherMixture(object):
 
 
     def test_vmf_log_detect_breakage(self):
+        '''
+        Find where scipy approximation breaks down.
+        This doesn't really test anything but demonstrates where approximation
+        should be applied instead.
+        '''
         n_examples = 3
         kappas = [5, 30, 100, 1000, 5000]
         n_features = range(2, 500)
@@ -116,7 +122,27 @@ class TestVonMisesFisherMixture(object):
         assert_array_equal(ll_labels, movmf.labels_)
 
 
-    def test_integration_dense_soft(self):
+    @pytest.mark.parametrize("params_in", [
+        {
+            'posterior_type': 'soft',
+        },
+        {
+            'posterior_type': 'hard',
+        },
+        {
+            'posterior_type': 'soft',
+            'n_jobs': 2,
+        },
+        {
+            'posterior_type': 'hard',
+            'n_jobs': 3,
+        },
+        {
+            'posterior_type': 'hard',
+            'force_weights': np.ones(5.)/5.,
+        },
+    ])
+    def test_integration_dense(self, params_in):
         n_clusters = 5
         n_examples = 20
         n_features = 100
@@ -124,9 +150,8 @@ class TestVonMisesFisherMixture(object):
         for ee in range(n_examples):
             X[ee, :] /= np.linalg.norm(X[ee, :])
 
-        movmf = VonMisesFisherMixture(
-                n_clusters=n_clusters,
-                posterior_type='soft')
+        params_in.update({'n_clusters': n_clusters})
+        movmf = VonMisesFisherMixture(**params_in)
         movmf.fit(X)
 
         assert movmf.cluster_centers_.shape == (n_clusters, n_features)
@@ -154,45 +179,27 @@ class TestVonMisesFisherMixture(object):
         assert_array_equal(ll_labels, movmf.labels_)
 
 
-    def test_integration_dense_hard(self):
-        n_clusters = 5
-        n_examples = 20
-        n_features = 100
-        X = np.random.randn(n_examples, n_features)
-        for ee in range(n_examples):
-            X[ee, :] /= np.linalg.norm(X[ee, :])
-
-        movmf = VonMisesFisherMixture(
-                n_clusters=n_clusters,
-                posterior_type='hard')
-        movmf.fit(X)
-
-        assert movmf.cluster_centers_.shape == (n_clusters, n_features)
-        assert len(movmf.concentrations_) == n_clusters
-        assert len(movmf.weights_) == n_clusters
-        assert len(movmf.labels_) == n_examples
-
-        for center in movmf.cluster_centers_:
-            assert_almost_equal(np.linalg.norm(center), 1.0)
-
-        for concentration in movmf.concentrations_:
-            assert concentration > 0
-
-        for weight in movmf.weights_:
-            assert not np.isnan(weight)
-
-        plabels = movmf.predict(X)
-        assert_array_equal(plabels, movmf.labels_)
-
-        ll = movmf.log_likelihood(X)
-        ll_labels = np.zeros(movmf.labels_.shape)
-        for ee in range(n_examples):
-            ll_labels[ee] = np.argmax(ll[:, ee])
-
-        assert_array_equal(ll_labels, movmf.labels_)
-
-
-    def test_integration_sparse_soft(self):
+    @pytest.mark.parametrize("params_in", [
+        {
+            'posterior_type': 'soft',
+        },
+        {
+            'posterior_type': 'hard',
+        },
+        {
+            'posterior_type': 'soft',
+            'n_jobs': 2,
+        },
+        {
+            'posterior_type': 'hard',
+            'n_jobs': 3,
+        },
+        {
+            'posterior_type': 'hard',
+            'force_weights': np.ones(5.)/5.,
+        },
+    ])
+    def test_integration_sparse(self, params_in):
         n_clusters = 5
         n_examples = 20
         n_features = 100
@@ -231,45 +238,3 @@ class TestVonMisesFisherMixture(object):
             ll_labels[ee] = np.argmax(ll[:, ee])
 
         assert_array_equal(ll_labels, movmf.labels_)
-
-
-    def test_integration_sparse_hard(self):
-        n_clusters = 5
-        n_examples = 20
-        n_features = 100
-        n_nonzero = 10
-        X = sp.sparse.csr_matrix((n_examples, n_features))
-        for ee in range(n_examples):
-            ridx = np.random.randint(n_features, size=(n_nonzero))
-            X[ee, ridx] = np.random.randn(n_nonzero)
-            X[ee, :] /= sp.sparse.linalg.norm(X[ee, :])
-
-        movmf = VonMisesFisherMixture(
-                n_clusters=n_clusters,
-                posterior_type='hard')
-        movmf.fit(X)
-
-        assert movmf.cluster_centers_.shape == (n_clusters, n_features)
-        assert len(movmf.concentrations_) == n_clusters
-        assert len(movmf.weights_) == n_clusters
-        assert len(movmf.labels_) == n_examples
-
-        for center in movmf.cluster_centers_:
-            assert_almost_equal(np.linalg.norm(center), 1.0)
-
-        for concentration in movmf.concentrations_:
-            assert concentration > 0
-
-        for weight in movmf.weights_:
-            assert not np.isnan(weight)
-
-        plabels = movmf.predict(X)
-        assert_array_equal(plabels, movmf.labels_)
-
-        ll = movmf.log_likelihood(X)
-        ll_labels = np.zeros(movmf.labels_.shape)
-        for ee in range(n_examples):
-            ll_labels[ee] = np.argmax(ll[:, ee])
-
-        assert_array_equal(ll_labels, movmf.labels_)
-
