@@ -186,7 +186,7 @@ table.append([
 ###############################################################################
 # Mixture of von Mises Fisher clustering (hard)
 vmf_hard = VonMisesFisherMixture(n_clusters=true_k, posterior_type='hard',
-    init='random-class', n_init=20, force_weights=np.ones((true_k,))/true_k)
+    init='spherical-k-means', n_init=20, force_weights=np.ones((true_k,))/true_k)
 
 print("Clustering with %s" % vmf_hard)
 vmf_hard.fit(X)
