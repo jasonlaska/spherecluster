@@ -34,7 +34,8 @@ class TestVonMisesFisherMixture(object):
                     kappa,
                     mu)
 
-            normalized_approx_diff =  np.linalg.norm(v - v_approx) / np.linalg.norm(v)
+            normalized_approx_diff =\
+                    np.linalg.norm(v - v_approx) / np.linalg.norm(v)
             print normalized_approx_diff
             diffs.append(normalized_approx_diff)
 
@@ -58,7 +59,7 @@ class TestVonMisesFisherMixture(object):
                     X[ee, :] /= np.linalg.norm(X[ee, :])
 
                 try:
-                    v = von_mises_fisher_mixture._vmf_log(
+                    von_mises_fisher_mixture._vmf_log(
                             X,
                             kappa,
                             mu)
