@@ -83,6 +83,12 @@ def _vmf_normalize(kappa, dim):
     else:
         denom = np.power(2. * np.pi, dim/2.) * iv(dim/2. - 1., kappa)
 
+    if np.isinf(num):
+        raise ValueError("VMF scaling numerator was inf.")
+
+    if np.isinf(denom):
+        raise ValueError("VMF scaling denominator was inf.")
+
     if np.abs(denom) < 1e-15:
         raise ValueError("VMF scaling denominator was 0.")
 
@@ -865,7 +871,7 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
 
 
     def score(self, X, y=None):
-        """Opposite of the value of X on the K-means objective.
+        """Inertia score (sum of all distances to closest cluster).
 
         Parameters
         ----------
@@ -875,7 +881,7 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
         Returns
         -------
         score : float
-            Opposite of the value of X on the K-means objective.
+            Larger score is better.
         """
         check_is_fitted(self, 'cluster_centers_')
 
