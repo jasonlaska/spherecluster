@@ -203,9 +203,8 @@ class TestVonMisesFisherMixture(object):
             X[ee, ridx] = np.random.randn(n_nonzero)
             X[ee, :] /= sp.sparse.linalg.norm(X[ee, :])
 
-        movmf = VonMisesFisherMixture(
-                n_clusters=n_clusters,
-                posterior_type='soft')
+        params_in.update({'n_clusters': n_clusters})
+        movmf = VonMisesFisherMixture(**params_in)
         movmf.fit(X)
 
         assert movmf.cluster_centers_.shape == (n_clusters, n_features)
