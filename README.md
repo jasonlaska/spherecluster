@@ -49,6 +49,8 @@ or via PyPI
 
     pip install spherecluster
 
+The package requires that `numpy` and `scipy` are installed independently first.
+
 ## Usage
 Both `SphericalKMeans` and `VonMisesFisherMixture` are standard sklearn estimators and mirror the parameter names for `sklearn.cluster.kmeans`.
 
