@@ -25,4 +25,5 @@ setup(name='spherecluster',
       packages=find_packages(),
       install_requires=INSTALL_REQUIRES,
       author_email='jason@claralabs.com',
+      url='https://github.com/clara-labs/spherecluster',
       )
