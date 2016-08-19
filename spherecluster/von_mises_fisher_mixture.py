@@ -23,7 +23,7 @@ from sklearn.utils.extmath import squared_norm
 from sklearn.metrics.pairwise import cosine_distances
 from sklearn.externals.joblib import Parallel, delayed
 
-import spherical_kmeans
+from . import spherical_kmeans
 
 
 MAX_CONTENTRATION = 1e10
