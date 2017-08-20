@@ -207,5 +207,4 @@ print("V-measure: %0.3f (spherical k-means)" % metrics.v_measure_score(labels, s
 print("V-measure: %0.3f (vmf-soft)" % metrics.v_measure_score(labels, vmf_soft.labels_))
 print("V-measure: %0.3f (vmf-hard)" % metrics.v_measure_score(labels, vmf_hard.labels_))
 
-
-raw_input()
+# raw_input()

@@ -229,6 +229,9 @@ class SphericalKMeans(KMeans):
         the function returns, but small numerical differences may be introduced
         by subtracting and then adding the data mean.
 
+    normalize : boolean, default True
+        Normalize the input to have unnit norm.
+
     Attributes
     ----------
 
@@ -243,7 +246,7 @@ class SphericalKMeans(KMeans):
     """
     def __init__(self, n_clusters=8, init='k-means++', n_init=10,
                  max_iter=300, tol=1e-4, n_jobs=1,
-                 verbose=0, random_state=None, copy_x=True):
+                 verbose=0, random_state=None, copy_x=True, normalize=True):
         self.n_clusters = n_clusters
         self.init = init
         self.max_iter = max_iter
@@ -253,6 +256,7 @@ class SphericalKMeans(KMeans):
         self.random_state = random_state
         self.copy_x = copy_x
         self.n_jobs = n_jobs
+        self.normalize = normalize
 
     def fit(self, X, y=None):
         """Compute k-means clustering.
@@ -262,6 +266,9 @@ class SphericalKMeans(KMeans):
 
         X : array-like or sparse matrix, shape=(n_samples, n_features)
         """
+        if self.normalize:
+            X = normalize(X)
+
         random_state = check_random_state(self.random_state)
         X = self._check_fit_data(X)
 

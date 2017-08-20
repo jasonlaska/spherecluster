@@ -19,6 +19,7 @@ from sklearn.utils import (
     check_random_state,
     as_float_array,
 )
+from sklearn.preprocessing import normalize
 from sklearn.utils.extmath import squared_norm
 from sklearn.metrics.pairwise import cosine_distances
 from sklearn.externals.joblib import Parallel, delayed
@@ -688,6 +689,9 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
         the function returns, but small numerical differences may be introduced
         by subtracting and then adding the data mean.
 
+    normalize : boolean, default True
+        Normalize the input to have unnit norm.
+
     Attributes
     ----------
 
@@ -719,7 +723,7 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
     def __init__(self, n_clusters=5, posterior_type='soft', force_weights=None,
                  n_init=10, n_jobs=1, max_iter=300, verbose=False,
                  init='random-class', random_state=None, tol=1e-6,
-                 copy_x=True):
+                 copy_x=True, normalize=True):
         self.n_clusters = n_clusters
         self.posterior_type = posterior_type
         self.force_weights = force_weights
@@ -731,6 +735,7 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
         self.random_state = random_state
         self.tol = tol
         self.copy_x = copy_x
+        self.normalize = normalize
 
         # results from algorithm
         self.cluster_centers_ = None
@@ -764,8 +769,8 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
             else:
                 n = np.linalg.norm(X[ee, :])
 
-            if np.abs(n - 1.) > 1e-4:
-                raise ValueError("Data l2-norm must be 1")
+            if np.abs(n - 1.) > 1e-3:
+                raise ValueError("Data l2-norm must be 1, found {}".format(n))
 
         return X
 
@@ -797,6 +802,9 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
         ----------
         X : array-like or sparse matrix, shape=(n_samples, n_features)
         """
+        if self.normalize:
+            X = normalize(X)
+
         self._check_force_weights()
         random_state = check_random_state(self.random_state)
         X = self._check_fit_data(X)
