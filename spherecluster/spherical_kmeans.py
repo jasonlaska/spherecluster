@@ -94,8 +94,9 @@ def _spherical_kmeans_single_lloyd(X, n_clusters, max_iter=300,
 
 
 def spherical_k_means(X, n_clusters, init='k-means++', n_init=10,
-            max_iter=300, verbose=False, tol=1e-4, random_state=None,
-            copy_x=True, n_jobs=1, algorithm="auto", return_n_iter=False):
+                      max_iter=300, verbose=False, tol=1e-4, random_state=None,
+                      copy_x=True, n_jobs=1, algorithm="auto",
+                      return_n_iter=False):
     """Modified from sklearn.cluster.k_means_.k_means.
     """
     if n_init <= 0:
@@ -145,12 +146,15 @@ def spherical_k_means(X, n_clusters, init='k-means++', n_init=10,
         # parallelisation of k-means runs
         seeds = random_state.randint(np.iinfo(np.int32).max, size=n_init)
         results = Parallel(n_jobs=n_jobs, verbose=0)(
-            delayed(_spherical_kmeans_single_lloyd)(X, n_clusters,
-                                   max_iter=max_iter, init=init,
-                                   verbose=verbose, tol=tol,
-                                   x_squared_norms=x_squared_norms,
-                                   # Change seed to ensure variety
-                                   random_state=seed)
+            delayed(_spherical_kmeans_single_lloyd)(
+                X,
+                n_clusters,
+                max_iter=max_iter, init=init,
+                verbose=verbose, tol=tol,
+                x_squared_norms=x_squared_norms,
+                # Change seed to ensure variety
+                random_state=seed
+            )
             for seed in seeds)
 
         # Get results with the lowest inertia
@@ -225,6 +229,9 @@ class SphericalKMeans(KMeans):
         the function returns, but small numerical differences may be introduced
         by subtracting and then adding the data mean.
 
+    normalize : boolean, default True
+        Normalize the input to have unnit norm.
+
     Attributes
     ----------
 
@@ -239,7 +246,7 @@ class SphericalKMeans(KMeans):
     """
     def __init__(self, n_clusters=8, init='k-means++', n_init=10,
                  max_iter=300, tol=1e-4, n_jobs=1,
-                 verbose=0, random_state=None, copy_x=True):
+                 verbose=0, random_state=None, copy_x=True, normalize=True):
         self.n_clusters = n_clusters
         self.init = init
         self.max_iter = max_iter
@@ -249,7 +256,7 @@ class SphericalKMeans(KMeans):
         self.random_state = random_state
         self.copy_x = copy_x
         self.n_jobs = n_jobs
-
+        self.normalize = normalize
 
     def fit(self, X, y=None):
         """Compute k-means clustering.
@@ -259,6 +266,9 @@ class SphericalKMeans(KMeans):
 
         X : array-like or sparse matrix, shape=(n_samples, n_features)
         """
+        if self.normalize:
+            X = normalize(X)
+
         random_state = check_random_state(self.random_state)
         X = self._check_fit_data(X)
 
@@ -267,9 +277,11 @@ class SphericalKMeans(KMeans):
         self.cluster_centers_, self.labels_, self.inertia_, self.n_iter_ = \
             spherical_k_means(
                 X, n_clusters=self.n_clusters, init=self.init,
-                n_init=self.n_init, max_iter=self.max_iter, verbose=self.verbose,
+                n_init=self.n_init, max_iter=self.max_iter,
+                verbose=self.verbose,
                 tol=self.tol, random_state=random_state, copy_x=self.copy_x,
                 n_jobs=self.n_jobs,
-                return_n_iter=True)
+                return_n_iter=True
+            )
 
         return self

@@ -1,10 +1,8 @@
+import sys
 import numpy as np
 from matplotlib import pyplot as plt
 from sklearn.cluster import KMeans
 from sklearn import metrics
-
-import sys
-sys.path.append('../spherecluster')
 
 from spherecluster import SphericalKMeans
 from spherecluster import VonMisesFisherMixture
@@ -19,13 +17,22 @@ Implements "small-mix" example from
 Provides a basic smell test that the algoriths are performing as intended.
 '''
 
+
+def r_input(val=None):
+    val = val or ''
+    if sys.version_info[0] >= 3:
+        return eval(input(val))
+
+    return raw_input(val)
+
+
 ###############################################################################
 # Generate small-mix dataset
 mu_0 = np.array([-0.251, -0.968])
 mu_1 = np.array([0.399, 0.917])
 mus = [mu_0, mu_1]
-kappa_0 = 8 # concentration parameter
-kappa_1 = 2 # concentration parameter
+kappa_0 = 8  # concentration parameter
+kappa_1 = 2  # concentration parameter
 kappas = [kappa_0, kappa_1]
 num_points_per_class = 100
 
@@ -184,46 +191,45 @@ plt.title('hard-movMF clustering')
 plt.show()
 
 
-print 'mu 0: {}'.format(mu_0)
-print 'mu 0: {} (kmeans), error={} ({})'.format(km.cluster_centers_[km_mu_0_idx], km_mu_0_error, km_mu_0_error_norm)
-print 'mu 0: {} (spherical kmeans), error={}'.format(skm.cluster_centers_[skm_mu_0_idx], skm_mu_0_error)
-print 'mu 0: {} (vmf-soft), error={}'.format(vmf_soft.cluster_centers_[vmf_soft_mu_0_idx], vmf_soft_mu_0_error)
-print 'mu 0: {} (vmf-hard), error={}'.format(vmf_hard.cluster_centers_[vmf_hard_mu_0_idx], vmf_hard_mu_0_error)
+print('mu 0: {}'.format(mu_0))
+print('mu 0: {} (kmeans), error={} ({})'.format(km.cluster_centers_[km_mu_0_idx], km_mu_0_error, km_mu_0_error_norm))
+print('mu 0: {} (spherical kmeans), error={}'.format(skm.cluster_centers_[skm_mu_0_idx], skm_mu_0_error))
+print('mu 0: {} (vmf-soft), error={}'.format(vmf_soft.cluster_centers_[vmf_soft_mu_0_idx], vmf_soft_mu_0_error))
+print('mu 0: {} (vmf-hard), error={}'.format(vmf_hard.cluster_centers_[vmf_hard_mu_0_idx], vmf_hard_mu_0_error))
 
-print '---'
-print 'mu 1: {}'.format(mu_1)
-print 'mu 1: {} (kmeans), error={} ({})'.format(km.cluster_centers_[km_mu_1_idx], km_mu_1_error, km_mu_1_error_norm)
-print 'mu 1: {} (spherical kmeans), error={}'.format(skm.cluster_centers_[skm_mu_1_idx], skm_mu_1_error)
-print 'mu 1: {} (vmf-soft), error={}'.format(vmf_soft.cluster_centers_[vmf_soft_mu_1_idx], vmf_soft_mu_1_error)
-print 'mu 1: {} (vmf-hard), error={}'.format(vmf_hard.cluster_centers_[vmf_hard_mu_1_idx], vmf_hard_mu_1_error)
+print('---')
+print('mu 1: {}'.format(mu_1))
+print('mu 1: {} (kmeans), error={} ({})'.format(km.cluster_centers_[km_mu_1_idx], km_mu_1_error, km_mu_1_error_norm))
+print('mu 1: {} (spherical kmeans), error={}'.format(skm.cluster_centers_[skm_mu_1_idx], skm_mu_1_error))
+print('mu 1: {} (vmf-soft), error={}'.format(vmf_soft.cluster_centers_[vmf_soft_mu_1_idx], vmf_soft_mu_1_error))
+print('mu 1: {} (vmf-hard), error={}'.format(vmf_hard.cluster_centers_[vmf_hard_mu_1_idx], vmf_hard_mu_1_error))
 
 
-print '---'
-print 'true kappas {}'.format(kappas)
-print 'vmf-soft kappas {}'.format(vmf_soft.concentrations_[[vmf_soft_mu_0_idx, vmf_soft_mu_1_idx]])
-print 'vmf-hard kappas {}'.format(vmf_hard.concentrations_[[vmf_hard_mu_0_idx, vmf_hard_mu_1_idx]])
+print('---')
+print('true kappas {}'.format(kappas))
+print('vmf-soft kappas {}'.format(vmf_soft.concentrations_[[vmf_soft_mu_0_idx, vmf_soft_mu_1_idx]]))
+print('vmf-hard kappas {}'.format(vmf_hard.concentrations_[[vmf_hard_mu_0_idx, vmf_hard_mu_1_idx]]))
 
-print '---'
-print 'vmf-soft weights {}'.format(vmf_soft.weights_[[vmf_soft_mu_0_idx, vmf_soft_mu_1_idx]])
-print 'vmf-hard weights {}'.format(vmf_hard.weights_[[vmf_hard_mu_0_idx, vmf_hard_mu_1_idx]])
+print('---')
+print('vmf-soft weights {}'.format(vmf_soft.weights_[[vmf_soft_mu_0_idx, vmf_soft_mu_1_idx]]))
+print('vmf-hard weights {}'.format(vmf_hard.weights_[[vmf_hard_mu_0_idx, vmf_hard_mu_1_idx]]))
 
-print '---'
+print('---')
 print("Homogeneity: %0.3f (k-means)" % metrics.homogeneity_score(labels, km.labels_))
 print("Homogeneity: %0.3f (spherical k-means)" % metrics.homogeneity_score(labels, skm.labels_))
 print("Homogeneity: %0.3f (vmf-soft)" % metrics.homogeneity_score(labels, vmf_soft.labels_))
 print("Homogeneity: %0.3f (vmf-hard)" % metrics.homogeneity_score(labels, vmf_hard.labels_))
 
-print '---'
+print('---')
 print("Completeness: %0.3f (k-means)" % metrics.completeness_score(labels, km.labels_))
 print("Completeness: %0.3f (spherical k-means)" % metrics.completeness_score(labels, skm.labels_))
 print("Completeness: %0.3f" % metrics.completeness_score(labels, vmf_soft.labels_))
 print("Completeness: %0.3f" % metrics.completeness_score(labels, vmf_hard.labels_))
 
-print '---'
+print('---')
 print("V-measure: %0.3f (k-means)" % metrics.v_measure_score(labels, km.labels_))
 print("V-measure: %0.3f (spherical k-means)" % metrics.v_measure_score(labels, skm.labels_))
 print("V-measure: %0.3f (vmf-soft)" % metrics.v_measure_score(labels, vmf_soft.labels_))
 print("V-measure: %0.3f (vmf-hard)" % metrics.v_measure_score(labels, vmf_hard.labels_))
 
-
-raw_input()
+r_input()

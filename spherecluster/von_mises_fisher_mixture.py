@@ -2,8 +2,8 @@ import warnings
 
 import numpy as np
 import scipy.sparse as sp
-from scipy.special import iv # modified Bessel function of first kind, I_v
-from numpy import i0 # modified Bessel function of first kind order 0, I_0
+from scipy.special import iv  # modified Bessel function of first kind, I_v
+from numpy import i0  # modified Bessel function of first kind order 0, I_0
 from scipy.misc import logsumexp
 
 from sklearn.base import BaseEstimator, ClusterMixin, TransformerMixin
@@ -19,6 +19,7 @@ from sklearn.utils import (
     check_random_state,
     as_float_array,
 )
+from sklearn.preprocessing import normalize
 from sklearn.utils.extmath import squared_norm
 from sklearn.metrics.pairwise import cosine_distances
 from sklearn.externals.joblib import Parallel, delayed
@@ -67,7 +68,9 @@ def _vmf_log(X, kappa, mu):
     Works well on small kappa and mu.
     """
     n_examples, n_features = X.shape
-    return np.log(_vmf_normalize(kappa, n_features) * np.exp(kappa * X.dot(mu).T))
+    return np.log(
+        _vmf_normalize(kappa, n_features) * np.exp(kappa * X.dot(mu).T)
+    )
 
 
 def _vmf_normalize(kappa, dim):
@@ -104,8 +107,10 @@ def _log_H_asymptotic(nu, kappa):
     """
     beta = np.sqrt((nu + 0.5)**2)
     kappa_l = np.min([kappa, np.sqrt((3. * nu + 11. / 2.) * (nu + 3. / 2.))])
-    return _S(kappa, nu + 0.5, beta) +\
-            (_S(kappa_l, nu, nu + 2.) - _S(kappa_l, nu + 0.5, beta))
+    return (
+        _S(kappa, nu + 0.5, beta) +
+        (_S(kappa_l, nu, nu + 2.) - _S(kappa_l, nu + 0.5, beta))
+    )
 
 
 def _S(kappa, alpha, beta):
@@ -144,8 +149,11 @@ def _vmf_log_asymptotic(X, kappa, mu):
     https://cran.r-project.org/web/packages/movMF/index.html
     """
     n_examples, n_features = X.shape
-    log_vfm = kappa * X.dot(mu).T +\
-            -_log_H_asymptotic(n_features / 2. - 1., kappa)
+    log_vfm = (
+        kappa * X.dot(mu).T +
+        - _log_H_asymptotic(n_features / 2. - 1., kappa)
+    )
+
     return log_vfm
 
 
@@ -362,8 +370,8 @@ def _maximization(X, posterior, force_weights=None):
 
 
 def _movMF(X, n_clusters, posterior_type='soft', force_weights=None,
-            max_iter=300, verbose=False, init='random-class',
-            random_state=None, tol=1e-6):
+           max_iter=300, verbose=False, init='random-class',
+           random_state=None, tol=1e-6):
     """Mixture of von Mises Fisher clustering.
 
     Implements the algorithms (i) and (ii) from
@@ -378,7 +386,7 @@ def _movMF(X, n_clusters, posterior_type='soft', force_weights=None,
     ----------
     Approximation of log-vmf distribution function from movMF R-package.
 
-    "movMF: An R Package for Fitting Mixtures of von Mises-Fisher Distributions"
+    movMF: An R Package for Fitting Mixtures of von Mises-Fisher Distributions
     by Kurt Hornik, Bettina Grun, 2014
 
     Find more at:
@@ -410,7 +418,7 @@ def _movMF(X, n_clusters, posterior_type='soft', force_weights=None,
         n_init consecutive runs in terms of inertia.
 
     init:  (string) one of
-        random-class [default]: random class assignment and centroid computation
+        random-class [default]: random class assignment & centroid computation
         k-means++ : uses sklearn k-means++ initialization algorithm
         spherical-k-means : use centroids from one pass of spherical k-means
         random : random unit norm vectors
@@ -500,8 +508,8 @@ def _movMF(X, n_clusters, posterior_type='soft', force_weights=None,
 
 
 def movMF(X, n_clusters, posterior_type='soft', force_weights=None, n_init=10,
-            n_jobs=1, max_iter=300, verbose=False, init='random-class',
-            random_state=None, tol=1e-6, copy_x=True):
+          n_jobs=1, max_iter=300, verbose=False, init='random-class',
+          random_state=None, tol=1e-6, copy_x=True):
     """Wrapper for parallelization of _movMF and running n_init times.
     """
     if n_init <= 0:
@@ -541,7 +549,12 @@ def movMF(X, n_clusters, posterior_type='soft', force_weights=None, n_init=10,
         # of the best results (as opposed to one set per run per thread).
         for it in range(n_init):
             # cluster on the sphere
-            centers, weights, concentrations, posterior, labels, inertia = _movMF(
+            (centers,
+             weights,
+             concentrations,
+             posterior,
+             labels,
+             inertia) = _movMF(
                     X,
                     n_clusters,
                     posterior_type=posterior_type,
@@ -577,8 +590,9 @@ def movMF(X, n_clusters, posterior_type='soft', force_weights=None, n_init=10,
             for seed in seeds)
 
         # Get results with the lowest inertia
-        centers, weights, concentrations, posterior, labels, inertia = \
-                zip(*results)
+        centers, weights, concentrations, posterior, labels, inertia = (
+            zip(*results)
+        )
         best = np.argmin(inertia)
         best_labels = labels[best]
         best_inertia = inertia[best]
@@ -586,9 +600,10 @@ def movMF(X, n_clusters, posterior_type='soft', force_weights=None, n_init=10,
         best_concentrations = concentrations[best]
         best_weights = weights[best]
 
-    return (best_centers, best_labels, best_inertia, best_weights,
-        best_concentrations, best_posterior)
-
+    return (
+        best_centers, best_labels, best_inertia, best_weights,
+        best_concentrations, best_posterior
+    )
 
 
 class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
@@ -606,7 +621,7 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
     ----------
     Approximation of log-vmf distribution function from movMF R-package.
 
-    "movMF: An R Package for Fitting Mixtures of von Mises-Fisher Distributions"
+    movMF: An R Package for Fitting Mixtures of von Mises-Fisher Distributions
     by Kurt Hornik, Bettina Grun, 2014
 
     Find more at:
@@ -640,7 +655,7 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
         n_init consecutive runs in terms of inertia.
 
     init:  (string) one of
-        random-class [default]: random class assignment and centroid computation
+        random-class [default]: random class assignment & centroid computation
         k-means++ : uses sklearn k-means++ initialization algorithm
         spherical-k-means : use centroids from one pass of spherical k-means
         random : random unit norm vectors
@@ -674,6 +689,9 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
         the function returns, but small numerical differences may be introduced
         by subtracting and then adding the data mean.
 
+    normalize : boolean, default True
+        Normalize the input to have unnit norm.
+
     Attributes
     ----------
 
@@ -703,8 +721,9 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
         column values correspond to soft clustering weights.
     """
     def __init__(self, n_clusters=5, posterior_type='soft', force_weights=None,
-            n_init=10, n_jobs=1, max_iter=300, verbose=False,
-            init='random-class', random_state=None, tol=1e-6, copy_x=True):
+                 n_init=10, n_jobs=1, max_iter=300, verbose=False,
+                 init='random-class', random_state=None, tol=1e-6,
+                 copy_x=True, normalize=True):
         self.n_clusters = n_clusters
         self.posterior_type = posterior_type
         self.force_weights = force_weights
@@ -716,6 +735,7 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
         self.random_state = random_state
         self.tol = tol
         self.copy_x = copy_x
+        self.normalize = normalize
 
         # results from algorithm
         self.cluster_centers_ = None
@@ -725,14 +745,13 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
         self.concentrations_ = None
         self.posterior_ = None
 
-
     def _check_force_weights(self):
         if self.force_weights is None:
             return
 
         if len(self.force_weights) != self.n_clusters:
             raise ValueError(("len(force_weights)={} but must equal "
-                                "n_clusters={}".format(
+                              "n_clusters={}".format(
                                     len(self.force_weights),
                                     self.n_clusters)))
 
@@ -751,10 +770,9 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
                 n = np.linalg.norm(X[ee, :])
 
             if np.abs(n - 1.) > 1e-4:
-                raise ValueError("Data l2-norm must be 1")
+                raise ValueError("Data l2-norm must be 1, found {}".format(n))
 
         return X
-
 
     def _check_test_data(self, X):
         X = check_array(X, accept_sparse='csr', dtype=FLOAT_DTYPES,
@@ -773,10 +791,9 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
                 n = np.linalg.norm(X[ee, :])
 
             if np.abs(n - 1.) > 1e-4:
-                raise ValueError("Data l2-norm must be 1")
+                raise ValueError("Data l2-norm must be 1, found {}".format(n))
 
         return X
-
 
     def fit(self, X, y=None):
         """Compute mixture of von Mises Fisher clustering.
@@ -785,20 +802,24 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
         ----------
         X : array-like or sparse matrix, shape=(n_samples, n_features)
         """
+        if self.normalize:
+            X = normalize(X)
+
         self._check_force_weights()
         random_state = check_random_state(self.random_state)
         X = self._check_fit_data(X)
 
         (self.cluster_centers_, self.labels_, self.inertia_, self.weights_,
-                self.concentrations_, self.posterior_) = movMF(
+         self.concentrations_, self.posterior_) = movMF(
                 X, self.n_clusters, posterior_type=self.posterior_type,
                 force_weights=self.force_weights, n_init=self.n_init,
                 n_jobs=self.n_jobs, max_iter=self.max_iter,
-                verbose=self.verbose, init=self.init, random_state=random_state,
-                tol=self.tol, copy_x=self.copy_x)
+                verbose=self.verbose, init=self.init,
+                random_state=random_state,
+                tol=self.tol, copy_x=self.copy_x
+            )
 
         return self
-
 
     def fit_predict(self, X, y=None):
         """Compute cluster centers and predict cluster index for each sample.
@@ -806,7 +827,6 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
         predict(X).
         """
         return self.fit(X).labels_
-
 
     def fit_transform(self, X, y=None):
         """Compute clustering and transform X to cluster-distance space.
@@ -816,9 +836,7 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
         # np.array or CSR format already.
         # XXX This skips _check_test_data, which may change the dtype;
         # we should refactor the input validation.
-        X = self._check_fit_data(X)
         return self.fit(X)._transform(X)
-
 
     def transform(self, X, y=None):
         """Transform X to a cluster-distance space.
@@ -836,15 +854,16 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
         X_new : array, shape [n_samples, k]
             X transformed in the new space.
         """
+        if self.normalize:
+            X = normalize(X)
+
         check_is_fitted(self, 'cluster_centers_')
         X = self._check_test_data(X)
         return self._transform(X)
 
-
     def _transform(self, X):
         """guts of transform method; no input validation"""
         return cosine_distances(X, self.cluster_centers_)
-
 
     def predict(self, X):
         """Predict the closest cluster each sample in X belongs to.
@@ -864,11 +883,13 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
         labels : array, shape [n_samples,]
             Index of the cluster each sample belongs to.
         """
+        if self.normalize:
+            X = normalize(X)
+
         check_is_fitted(self, 'cluster_centers_')
 
         X = self._check_test_data(X)
         return _labels_inertia(X, self.cluster_centers_)[0]
-
 
     def score(self, X, y=None):
         """Inertia score (sum of all distances to closest cluster).
@@ -883,18 +904,19 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
         score : float
             Larger score is better.
         """
-        check_is_fitted(self, 'cluster_centers_')
+        if self.normalize:
+            X = normalize(X)
 
+        check_is_fitted(self, 'cluster_centers_')
         X = self._check_test_data(X)
         return -_labels_inertia(X, self.cluster_centers_)[1]
-
 
     def log_likelihood(self, X):
         check_is_fitted(self, 'cluster_centers_')
 
         return _log_likelihood(
-                X,
-                self.cluster_centers_,
-                self.weights_,
-                self.concentrations_)
-
+            X,
+            self.cluster_centers_,
+            self.weights_,
+            self.concentrations_
+        )

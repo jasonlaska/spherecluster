@@ -36,7 +36,7 @@ def _sample_weight(kappa, dim):
     """Rejection sampling scheme for sampling distance from center on
     surface of the sphere.
     """
-    dim = dim - 1 # since S^{n-1}
+    dim = dim - 1  # since S^{n-1}
     b = dim / (np.sqrt(4. * kappa**2 + dim**2) + 2 * kappa)
     x = (1. - b) / (1. + b)
     c = kappa * x + dim * np.log(1 - x**2)
@@ -50,10 +50,8 @@ def _sample_weight(kappa, dim):
 
 
 def _sample_orthonormal_to(mu):
-    """Sample point on sphere orthogonal to mu.
-    """
+    """Sample point on sphere orthogonal to mu."""
     v = np.random.randn(mu.shape[0])
     proj_mu_v = mu * np.dot(mu, v) / np.linalg.norm(mu)
     orthto = v - proj_mu_v
     return orthto / np.linalg.norm(orthto)
-
