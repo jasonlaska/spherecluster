@@ -769,7 +769,7 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
             else:
                 n = np.linalg.norm(X[ee, :])
 
-            if np.abs(n - 1.) > 1e-3:
+            if np.abs(n - 1.) > 1e-4:
                 raise ValueError("Data l2-norm must be 1, found {}".format(n))
 
         return X
@@ -791,7 +791,7 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
                 n = np.linalg.norm(X[ee, :])
 
             if np.abs(n - 1.) > 1e-4:
-                raise ValueError("Data l2-norm must be 1")
+                raise ValueError("Data l2-norm must be 1, found {}".format(n))
 
         return X
 
@@ -836,7 +836,6 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
         # np.array or CSR format already.
         # XXX This skips _check_test_data, which may change the dtype;
         # we should refactor the input validation.
-        X = self._check_fit_data(X)
         return self.fit(X)._transform(X)
 
     def transform(self, X, y=None):
@@ -855,6 +854,9 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
         X_new : array, shape [n_samples, k]
             X transformed in the new space.
         """
+        if self.normalize:
+            X = normalize(X)
+
         check_is_fitted(self, 'cluster_centers_')
         X = self._check_test_data(X)
         return self._transform(X)
@@ -881,6 +883,9 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
         labels : array, shape [n_samples,]
             Index of the cluster each sample belongs to.
         """
+        if self.normalize:
+            X = normalize(X)
+
         check_is_fitted(self, 'cluster_centers_')
 
         X = self._check_test_data(X)
@@ -899,8 +904,10 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
         score : float
             Larger score is better.
         """
-        check_is_fitted(self, 'cluster_centers_')
+        if self.normalize:
+            X = normalize(X)
 
+        check_is_fitted(self, 'cluster_centers_')
         X = self._check_test_data(X)
         return -_labels_inertia(X, self.cluster_centers_)[1]
 
@@ -908,7 +915,8 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
         check_is_fitted(self, 'cluster_centers_')
 
         return _log_likelihood(
-                X,
-                self.cluster_centers_,
-                self.weights_,
-                self.concentrations_)
+            X,
+            self.cluster_centers_,
+            self.weights_,
+            self.concentrations_
+        )

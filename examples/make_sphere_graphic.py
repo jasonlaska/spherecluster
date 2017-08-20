@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D  # NOQA
@@ -36,4 +37,11 @@ ax.set_aspect('equal')
 plt.axis('off')
 plt.show()
 
-# raw_input()
+def r_input(val=None):
+    val = val or ''
+    if sys.version_info[0] >= 3:
+        return eval(input(val))
+
+    return raw_input(val)
+
+r_input()

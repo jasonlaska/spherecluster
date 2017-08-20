@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 from matplotlib import pyplot as plt
 from sklearn.cluster import KMeans
@@ -15,6 +16,15 @@ Implements "small-mix" example from
 
 Provides a basic smell test that the algoriths are performing as intended.
 '''
+
+
+def r_input(val=None):
+    val = val or ''
+    if sys.version_info[0] >= 3:
+        return eval(input(val))
+
+    return raw_input(val)
+
 
 ###############################################################################
 # Generate small-mix dataset
@@ -222,4 +232,4 @@ print("V-measure: %0.3f (spherical k-means)" % metrics.v_measure_score(labels, s
 print("V-measure: %0.3f (vmf-soft)" % metrics.v_measure_score(labels, vmf_soft.labels_))
 print("V-measure: %0.3f (vmf-hard)" % metrics.v_measure_score(labels, vmf_hard.labels_))
 
-# raw_input()
+r_input()
