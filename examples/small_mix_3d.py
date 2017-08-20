@@ -4,9 +4,6 @@ from mpl_toolkits.mplot3d import Axes3D
 from sklearn.cluster import KMeans
 from sklearn import metrics
 
-import sys
-sys.path.append('../spherecluster')
-
 from spherecluster import SphericalKMeans
 from spherecluster import VonMisesFisherMixture
 from spherecluster import sample_vMF

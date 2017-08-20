@@ -13,9 +13,6 @@ from tabulate import tabulate
 import logging
 from sklearn.cluster import KMeans
 
-import sys
-sys.path.append('../spherecluster')
-
 from spherecluster import SphericalKMeans
 from spherecluster import VonMisesFisherMixture
 
