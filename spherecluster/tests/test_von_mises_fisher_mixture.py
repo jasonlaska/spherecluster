@@ -75,12 +75,12 @@ def test_vmf_log_detect_breakage():
                     first_breakage = n_f
 
         breakage_points.append(first_breakage)
-        print 'Scipy vmf_log breaks for kappa={} at n_features={}'.format(
+        print('Scipy vmf_log breaks for kappa={} at n_features={}'.format(
             kappa,
             first_breakage
-        )
+        ))
 
-    print breakage_points
+    print(breakage_points)
     assert_array_equal(breakage_points, [141, 420, 311, 3, 3])
 
 
