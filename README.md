@@ -63,7 +63,7 @@ Both `SphericalKMeans` and `VonMisesFisherMixture` are standard sklearn estimato
 
     # skm.cluster_centers_
     # skm.labels_
-    # skm.intertia_
+    # skm.inertia_
 
     # movMF-soft
     from spherecluster import VonMisesFisherMixture
@@ -74,7 +74,7 @@ Both `SphericalKMeans` and `VonMisesFisherMixture` are standard sklearn estimato
     # vmf_soft.labels_
     # vmf_soft.weights_
     # vmf_soft.concentrations_
-    # vmf_soft.intertia_
+    # vmf_soft.inertia_
 
     # movMF-hard
     from spherecluster import VonMisesFisherMixture
@@ -85,7 +85,7 @@ Both `SphericalKMeans` and `VonMisesFisherMixture` are standard sklearn estimato
     # vmf_hard.labels_
     # vmf_hard.weights_
     # vmf_hard.concentrations_
-    # vmf_hard.intertia_
+    # vmf_hard.inertia_
 
 The full set of parameters for the `VonMisesFisherMixture` class can be found here in the doc string for the class; see `help(VonMisesFisherMixture)`.
 

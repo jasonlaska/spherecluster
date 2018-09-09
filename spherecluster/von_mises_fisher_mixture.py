@@ -31,24 +31,24 @@ MAX_CONTENTRATION = 1e10
 
 
 def _inertia_from_labels(X, centers, labels):
-    """Compute interia with cosine distance using known labels.
+    """Compute inertia with cosine distance using known labels.
     """
     n_examples, n_features = X.shape
-    intertia = np.zeros((n_examples, ))
+    inertia = np.zeros((n_examples, ))
     for ee in range(n_examples):
-        intertia[ee] = 1 - X[ee, :].dot(centers[int(labels[ee]), :].T)
+        inertia[ee] = 1 - X[ee, :].dot(centers[int(labels[ee]), :].T)
 
-    return np.sum(intertia)
+    return np.sum(inertia)
 
 
 def _labels_inertia(X, centers):
-    """Compute labels and interia with cosine distance.
+    """Compute labels and inertia with cosine distance.
     """
     n_examples, n_features = X.shape
     n_clusters, n_features = centers.shape
 
     labels = np.zeros((n_examples, ))
-    intertia = np.zeros((n_examples, ))
+    inertia = np.zeros((n_examples, ))
 
     for ee in range(n_examples):
         dists = np.zeros((n_clusters, ))
@@ -56,9 +56,9 @@ def _labels_inertia(X, centers):
             dists[cc] = 1 - X[ee, :].dot(centers[cc, :].T)
 
         labels[ee] = np.argmin(dists)
-        intertia[ee] = dists[int(labels[ee])]
+        inertia[ee] = dists[int(labels[ee])]
 
-    return labels, np.sum(intertia)
+    return labels, np.sum(inertia)
 
 
 def _vmf_log(X, kappa, mu):
@@ -740,7 +740,7 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
         # results from algorithm
         self.cluster_centers_ = None
         self.labels = None
-        self.intertia_ = None
+        self.inertia_ = None
         self.weights_ = None
         self.concentrations_ = None
         self.posterior_ = None
