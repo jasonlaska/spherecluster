@@ -1,4 +1,4 @@
-'''
+"""
 Generate multivariate von Mises Fisher samples.
 
 This solution originally appears here:
@@ -9,7 +9,7 @@ Also see:
 Sampling from vMF on S^2:
     https://www.mitsuba-renderer.org/~wenzel/files/vmf.pdf
     http://www.stat.pitt.edu/sungkyu/software/randvonMisesFisher3.pdf
-'''
+"""
 import numpy as np
 
 
@@ -27,7 +27,7 @@ def sample_vMF(mu, kappa, num_samples):
         v = _sample_orthonormal_to(mu)
 
         # compute new point
-        result[nn, :] = v * np.sqrt(1. - w**2) + w * mu
+        result[nn, :] = v * np.sqrt(1. - w ** 2) + w * mu
 
     return result
 
@@ -37,9 +37,9 @@ def _sample_weight(kappa, dim):
     surface of the sphere.
     """
     dim = dim - 1  # since S^{n-1}
-    b = dim / (np.sqrt(4. * kappa**2 + dim**2) + 2 * kappa)
+    b = dim / (np.sqrt(4. * kappa ** 2 + dim ** 2) + 2 * kappa)
     x = (1. - b) / (1. + b)
-    c = kappa * x + dim * np.log(1 - x**2)
+    c = kappa * x + dim * np.log(1 - x ** 2)
 
     while True:
         z = np.random.beta(dim / 2., dim / 2.)

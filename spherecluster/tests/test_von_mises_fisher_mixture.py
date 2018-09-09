@@ -8,9 +8,9 @@ from spherecluster import sample_vMF
 
 
 def test_vmf_log_dense():
-    '''
+    """
     Test that approximation approaches whatever scipy has.
-    '''
+    """
     n_examples = 2
     n_features = 50
 
@@ -25,19 +25,11 @@ def test_vmf_log_dense():
 
     diffs = []
     for kappa in kappas:
-        v = von_mises_fisher_mixture._vmf_log(
-                X,
-                kappa,
-                mu)
+        v = von_mises_fisher_mixture._vmf_log(X, kappa, mu)
 
-        v_approx = von_mises_fisher_mixture._vmf_log_asymptotic(
-                X,
-                kappa,
-                mu)
+        v_approx = von_mises_fisher_mixture._vmf_log_asymptotic(X, kappa, mu)
 
-        normalized_approx_diff = (
-            np.linalg.norm(v - v_approx) / np.linalg.norm(v)
-        )
+        normalized_approx_diff = np.linalg.norm(v - v_approx) / np.linalg.norm(v)
         print(normalized_approx_diff)
         diffs.append(normalized_approx_diff)
 
@@ -45,11 +37,11 @@ def test_vmf_log_dense():
 
 
 def test_vmf_log_detect_breakage():
-    '''
+    """
     Find where scipy approximation breaks down.
     This doesn't really test anything but demonstrates where approximation
     should be applied instead.
-    '''
+    """
     n_examples = 3
     kappas = [5, 30, 100, 1000, 5000]
     n_features = range(2, 500)
@@ -66,19 +58,17 @@ def test_vmf_log_detect_breakage():
                 X[ee, :] /= np.linalg.norm(X[ee, :])
 
             try:
-                von_mises_fisher_mixture._vmf_log(
-                        X,
-                        kappa,
-                        mu)
+                von_mises_fisher_mixture._vmf_log(X, kappa, mu)
             except:
                 if first_breakage is None:
                     first_breakage = n_f
 
         breakage_points.append(first_breakage)
-        print('Scipy vmf_log breaks for kappa={} at n_features={}'.format(
-            kappa,
-            first_breakage
-        ))
+        print(
+            "Scipy vmf_log breaks for kappa={} at n_features={}".format(
+                kappa, first_breakage
+            )
+        )
 
     print(breakage_points)
     assert_array_equal(breakage_points, [141, 420, 311, 3, 3])
@@ -96,51 +86,34 @@ def test_maximization():
 
         X = sample_vMF(mu, kappa, num_points)
 
-        centers, weights, concentrations = (
-            von_mises_fisher_mixture._maximization(X, posterior)
+        centers, weights, concentrations = von_mises_fisher_mixture._maximization(
+            X, posterior
         )
 
+        print("center estimate error", np.linalg.norm(centers[0, :] - mu))
         print(
-            'center estimate error',
-            np.linalg.norm(centers[0, :] - mu)
-        )
-        print(
-            'kappa estimate',
-            np.abs(kappa - concentrations[0]) / kappa, kappa,
-            concentrations[0]
+            "kappa estimate",
+            np.abs(kappa - concentrations[0]) / kappa,
+            kappa,
+            concentrations[0],
         )
 
         assert_almost_equal(1., weights[0])
-        assert_almost_equal(
-                0.0,
-                np.abs(kappa - concentrations[0])/kappa,
-                decimal=2)
-        assert_almost_equal(
-                0.0,
-                np.linalg.norm(centers[0, :] - mu),
-                decimal=2)
+        assert_almost_equal(0.0, np.abs(kappa - concentrations[0]) / kappa, decimal=2)
+        assert_almost_equal(0.0, np.linalg.norm(centers[0, :] - mu), decimal=2)
 
 
-@pytest.mark.parametrize("params_in", [
-    {
-        'posterior_type': 'soft',
-    },
-    {
-        'posterior_type': 'hard',
-    },
-    {
-        'posterior_type': 'soft',
-        'n_jobs': 2,
-    },
-    {
-        'posterior_type': 'hard',
-        'n_jobs': 3,
-    },
-    {
-        'posterior_type': 'hard',
-        'force_weights': np.ones(5,) / 5.,
-    },
-])
+@pytest.mark.parametrize(
+    "params_in",
+    [
+        {"posterior_type": "soft"},
+        {"posterior_type": "hard"},
+        {"posterior_type": "soft", "n_jobs": 2},
+        {"posterior_type": "hard", "n_jobs": 3},
+        {"posterior_type": "hard", "force_weights": np.ones(5) / 5.},
+        {"posterior_type": "soft", "n_jobs": -1},
+    ],
+)
 def test_integration_dense(params_in):
     n_clusters = 5
     n_examples = 20
@@ -149,7 +122,7 @@ def test_integration_dense(params_in):
     for ee in range(n_examples):
         X[ee, :] /= np.linalg.norm(X[ee, :])
 
-    params_in.update({'n_clusters': n_clusters})
+    params_in.update({"n_clusters": n_clusters})
     movmf = VonMisesFisherMixture(**params_in)
     movmf.fit(X)
 
@@ -157,6 +130,7 @@ def test_integration_dense(params_in):
     assert len(movmf.concentrations_) == n_clusters
     assert len(movmf.weights_) == n_clusters
     assert len(movmf.labels_) == n_examples
+    assert len(movmf.posterior_) == n_clusters
 
     for center in movmf.cluster_centers_:
         assert_almost_equal(np.linalg.norm(center), 1.0)
@@ -178,26 +152,17 @@ def test_integration_dense(params_in):
     assert_array_equal(ll_labels, movmf.labels_)
 
 
-@pytest.mark.parametrize("params_in", [
-    {
-        'posterior_type': 'soft',
-    },
-    {
-        'posterior_type': 'hard',
-    },
-    {
-        'posterior_type': 'soft',
-        'n_jobs': 2,
-    },
-    {
-        'posterior_type': 'hard',
-        'n_jobs': 3,
-    },
-    {
-        'posterior_type': 'hard',
-        'force_weights': np.ones(5,) / 5.,
-    },
-])
+@pytest.mark.parametrize(
+    "params_in",
+    [
+        {"posterior_type": "soft"},
+        {"posterior_type": "hard"},
+        {"posterior_type": "soft", "n_jobs": 2},
+        {"posterior_type": "hard", "n_jobs": 3},
+        {"posterior_type": "hard", "force_weights": np.ones(5) / 5.},
+        {"posterior_type": "soft", "n_jobs": -1},
+    ],
+)
 def test_integration_sparse(params_in):
     n_clusters = 5
     n_examples = 20
@@ -209,7 +174,7 @@ def test_integration_sparse(params_in):
         X[ee, ridx] = np.random.randn(n_nonzero)
         X[ee, :] /= sp.sparse.linalg.norm(X[ee, :])
 
-    params_in.update({'n_clusters': n_clusters})
+    params_in.update({"n_clusters": n_clusters})
     movmf = VonMisesFisherMixture(**params_in)
     movmf.fit(X)
 
@@ -217,6 +182,7 @@ def test_integration_sparse(params_in):
     assert len(movmf.concentrations_) == n_clusters
     assert len(movmf.weights_) == n_clusters
     assert len(movmf.labels_) == n_examples
+    assert len(movmf.posterior_) == n_clusters
 
     for center in movmf.cluster_centers_:
         assert_almost_equal(np.linalg.norm(center), 1.0)

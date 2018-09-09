@@ -7,18 +7,10 @@ from numpy import i0  # modified Bessel function of first kind order 0, I_0
 from scipy.misc import logsumexp
 
 from sklearn.base import BaseEstimator, ClusterMixin, TransformerMixin
-from sklearn.cluster.k_means_ import (
-    _init_centroids,
-    _tolerance,
-    _validate_center_shape,
-)
+from sklearn.cluster.k_means_ import _init_centroids, _tolerance, _validate_center_shape
 from sklearn.utils.validation import FLOAT_DTYPES
 from sklearn.utils.validation import check_is_fitted
-from sklearn.utils import (
-    check_array,
-    check_random_state,
-    as_float_array,
-)
+from sklearn.utils import check_array, check_random_state, as_float_array
 from sklearn.preprocessing import normalize
 from sklearn.utils.extmath import squared_norm
 from sklearn.metrics.pairwise import cosine_distances
@@ -31,34 +23,34 @@ MAX_CONTENTRATION = 1e10
 
 
 def _inertia_from_labels(X, centers, labels):
-    """Compute interia with cosine distance using known labels.
+    """Compute inertia with cosine distance using known labels.
     """
     n_examples, n_features = X.shape
-    intertia = np.zeros((n_examples, ))
+    inertia = np.zeros((n_examples,))
     for ee in range(n_examples):
-        intertia[ee] = 1 - X[ee, :].dot(centers[int(labels[ee]), :].T)
+        inertia[ee] = 1 - X[ee, :].dot(centers[int(labels[ee]), :].T)
 
-    return np.sum(intertia)
+    return np.sum(inertia)
 
 
 def _labels_inertia(X, centers):
-    """Compute labels and interia with cosine distance.
+    """Compute labels and inertia with cosine distance.
     """
     n_examples, n_features = X.shape
     n_clusters, n_features = centers.shape
 
-    labels = np.zeros((n_examples, ))
-    intertia = np.zeros((n_examples, ))
+    labels = np.zeros((n_examples,))
+    inertia = np.zeros((n_examples,))
 
     for ee in range(n_examples):
-        dists = np.zeros((n_clusters, ))
+        dists = np.zeros((n_clusters,))
         for cc in range(n_clusters):
             dists[cc] = 1 - X[ee, :].dot(centers[cc, :].T)
 
         labels[ee] = np.argmin(dists)
-        intertia[ee] = dists[int(labels[ee])]
+        inertia[ee] = dists[int(labels[ee])]
 
-    return labels, np.sum(intertia)
+    return labels, np.sum(inertia)
 
 
 def _vmf_log(X, kappa, mu):
@@ -68,9 +60,7 @@ def _vmf_log(X, kappa, mu):
     Works well on small kappa and mu.
     """
     n_examples, n_features = X.shape
-    return np.log(
-        _vmf_normalize(kappa, n_features) * np.exp(kappa * X.dot(mu).T)
-    )
+    return np.log(_vmf_normalize(kappa, n_features) * np.exp(kappa * X.dot(mu).T))
 
 
 def _vmf_normalize(kappa, dim):
@@ -79,12 +69,12 @@ def _vmf_normalize(kappa, dim):
 
     Works well on small kappa and mu.
     """
-    num = np.power(kappa, dim/2. - 1.)
+    num = np.power(kappa, dim / 2. - 1.)
 
-    if dim/2. - 1. < 1e-15:
-        denom = np.power(2. * np.pi, dim/2.) * i0(kappa)
+    if dim / 2. - 1. < 1e-15:
+        denom = np.power(2. * np.pi, dim / 2.) * i0(kappa)
     else:
-        denom = np.power(2. * np.pi, dim/2.) * iv(dim/2. - 1., kappa)
+        denom = np.power(2. * np.pi, dim / 2.) * iv(dim / 2. - 1., kappa)
 
     if np.isinf(num):
         raise ValueError("VMF scaling numerator was inf.")
@@ -105,11 +95,10 @@ def _log_H_asymptotic(nu, kappa):
     See "lH_asymptotic <-" in movMF.R and utility function implementation notes
     from https://cran.r-project.org/web/packages/movMF/index.html
     """
-    beta = np.sqrt((nu + 0.5)**2)
+    beta = np.sqrt((nu + 0.5) ** 2)
     kappa_l = np.min([kappa, np.sqrt((3. * nu + 11. / 2.) * (nu + 3. / 2.))])
-    return (
-        _S(kappa, nu + 0.5, beta) +
-        (_S(kappa_l, nu, nu + 2.) - _S(kappa_l, nu + 0.5, beta))
+    return _S(kappa, nu + 0.5, beta) + (
+        _S(kappa_l, nu, nu + 2.) - _S(kappa_l, nu + 0.5, beta)
     )
 
 
@@ -126,7 +115,7 @@ def _S(kappa, alpha, beta):
     alpha = 1. * alpha
     beta = 1. * np.abs(beta)
     a_plus_b = alpha + beta
-    u = np.sqrt(kappa**2 + beta**2)
+    u = np.sqrt(kappa ** 2 + beta ** 2)
     if alpha == 0:
         alpha_scale = 0
     else:
@@ -149,10 +138,7 @@ def _vmf_log_asymptotic(X, kappa, mu):
     https://cran.r-project.org/web/packages/movMF/index.html
     """
     n_examples, n_features = X.shape
-    log_vfm = (
-        kappa * X.dot(mu).T +
-        - _log_H_asymptotic(n_features / 2. - 1., kappa)
-    )
+    log_vfm = kappa * X.dot(mu).T + -_log_H_asymptotic(n_features / 2. - 1., kappa)
 
     return log_vfm
 
@@ -177,8 +163,7 @@ def _log_likelihood(X, centers, weights, concentrations):
     weights_log = np.log(weights)
     posterior = np.tile(weights_log.T, (n_examples, 1)).T + f_log
     for ee in range(n_examples):
-        posterior[:, ee] = np.exp(
-                posterior[:, ee] - logsumexp(posterior[:, ee]))
+        posterior[:, ee] = np.exp(posterior[:, ee] - logsumexp(posterior[:, ee]))
 
     return posterior
 
@@ -220,40 +205,41 @@ def _init_unit_centers(X, n_clusters, random_state, init):
 
         return centers
 
-    elif init == 'spherical-k-means':
-        labels, inertia, centers, iters =\
-                spherical_kmeans._spherical_kmeans_single_lloyd(
-                    X,
-                    n_clusters,
-                    x_squared_norms=np.ones((n_examples, )),
-                    init='k-means++')
+    elif init == "spherical-k-means":
+        labels, inertia, centers, iters = spherical_kmeans._spherical_kmeans_single_lloyd(
+            X, n_clusters, x_squared_norms=np.ones((n_examples,)), init="k-means++"
+        )
 
         return centers
 
-    elif init == 'random':
+    elif init == "random":
         centers = np.random.randn(n_clusters, n_features)
         for cc in range(n_clusters):
             centers[cc, :] = centers[cc, :] / np.linalg.norm(centers[cc, :])
 
         return centers
 
-    elif init == 'k-means++':
-        centers = _init_centroids(X, n_clusters, 'k-means++',
-                                  random_state=random_state,
-                                  x_squared_norms=np.ones((n_examples, )))
+    elif init == "k-means++":
+        centers = _init_centroids(
+            X,
+            n_clusters,
+            "k-means++",
+            random_state=random_state,
+            x_squared_norms=np.ones((n_examples,)),
+        )
 
         for cc in range(n_clusters):
             centers[cc, :] = centers[cc, :] / np.linalg.norm(centers[cc, :])
 
         return centers
 
-    elif init == 'random-orthonormal':
+    elif init == "random-orthonormal":
         centers = np.random.randn(n_clusters, n_features)
-        q, r = np.linalg.qr(centers.T, mode='reduced')
+        q, r = np.linalg.qr(centers.T, mode="reduced")
 
         return q.T
 
-    elif init == 'random-class':
+    elif init == "random-class":
         centers = np.zeros((n_clusters, n_features))
         for cc in range(n_clusters):
             while np.linalg.norm(centers[cc, :]) == 0:
@@ -266,7 +252,7 @@ def _init_unit_centers(X, n_clusters, random_state, init):
         return centers
 
 
-def _expectation(X, centers, weights, concentrations, posterior_type='soft'):
+def _expectation(X, centers, weights, concentrations, posterior_type="soft"):
     """Compute the log-likelihood of each datapoint being in each cluster.
 
     Parameters
@@ -292,14 +278,13 @@ def _expectation(X, centers, weights, concentrations, posterior_type='soft'):
         f_log[cc, :] = vmf_f(X, concentrations[cc], centers[cc, :])
 
     posterior = np.zeros((n_clusters, n_examples))
-    if posterior_type == 'soft':
+    if posterior_type == "soft":
         weights_log = np.log(weights)
         posterior = np.tile(weights_log.T, (n_examples, 1)).T + f_log
         for ee in range(n_examples):
-            posterior[:, ee] = np.exp(
-                    posterior[:, ee] - logsumexp(posterior[:, ee]))
+            posterior[:, ee] = np.exp(posterior[:, ee] - logsumexp(posterior[:, ee]))
 
-    elif posterior_type == 'hard':
+    elif posterior_type == "hard":
         weights_log = np.log(weights)
         weighted_f_log = np.tile(weights_log.T, (n_examples, 1)).T + f_log
         for ee in range(n_examples):
@@ -369,9 +354,17 @@ def _maximization(X, posterior, force_weights=None):
     return centers, weights, concentrations
 
 
-def _movMF(X, n_clusters, posterior_type='soft', force_weights=None,
-           max_iter=300, verbose=False, init='random-class',
-           random_state=None, tol=1e-6):
+def _movMF(
+    X,
+    n_clusters,
+    posterior_type="soft",
+    force_weights=None,
+    max_iter=300,
+    verbose=False,
+    init="random-class",
+    random_state=None,
+    tol=1e-6,
+):
     """Mixture of von Mises Fisher clustering.
 
     Implements the algorithms (i) and (ii) from
@@ -476,29 +469,26 @@ def _movMF(X, n_clusters, posterior_type='soft', force_weights=None,
 
         # expectation step
         posterior = _expectation(
-                X,
-                centers,
-                weights,
-                concentrations,
-                posterior_type=posterior_type)
+            X, centers, weights, concentrations, posterior_type=posterior_type
+        )
 
         # maximization step
         centers, weights, concentrations = _maximization(
-                X,
-                posterior,
-                force_weights=force_weights)
+            X, posterior, force_weights=force_weights
+        )
 
         # check convergence
         tolcheck = squared_norm(centers_prev - centers)
         if tolcheck <= tol:
             if verbose:
-                print("Converged at iteration %d: "
-                      "center shift %e within tolerance %e"
-                      % (iter, tolcheck, tol))
+                print(
+                    "Converged at iteration %d: "
+                    "center shift %e within tolerance %e" % (iter, tolcheck, tol)
+                )
             break
 
     # labels come for free via posterior
-    labels = np.zeros((n_examples, ))
+    labels = np.zeros((n_examples,))
     for ee in range(n_examples):
         labels[ee] = np.argmax(posterior[:, ee])
 
@@ -507,33 +497,50 @@ def _movMF(X, n_clusters, posterior_type='soft', force_weights=None,
     return centers, weights, concentrations, posterior, labels, inertia
 
 
-def movMF(X, n_clusters, posterior_type='soft', force_weights=None, n_init=10,
-          n_jobs=1, max_iter=300, verbose=False, init='random-class',
-          random_state=None, tol=1e-6, copy_x=True):
+def movMF(
+    X,
+    n_clusters,
+    posterior_type="soft",
+    force_weights=None,
+    n_init=10,
+    n_jobs=1,
+    max_iter=300,
+    verbose=False,
+    init="random-class",
+    random_state=None,
+    tol=1e-6,
+    copy_x=True,
+):
     """Wrapper for parallelization of _movMF and running n_init times.
     """
     if n_init <= 0:
-        raise ValueError("Invalid number of initializations."
-                         " n_init=%d must be bigger than zero." % n_init)
+        raise ValueError(
+            "Invalid number of initializations."
+            " n_init=%d must be bigger than zero." % n_init
+        )
     random_state = check_random_state(random_state)
 
     if max_iter <= 0:
-        raise ValueError('Number of iterations should be a positive number,'
-                         ' got %d instead' % max_iter)
+        raise ValueError(
+            "Number of iterations should be a positive number,"
+            " got %d instead" % max_iter
+        )
 
     best_inertia = np.infty
     X = as_float_array(X, copy=copy_x)
     tol = _tolerance(X, tol)
 
-    if hasattr(init, '__array__'):
+    if hasattr(init, "__array__"):
         init = check_array(init, dtype=X.dtype.type, copy=True)
         _validate_center_shape(X, n_clusters, init)
 
         if n_init != 1:
             warnings.warn(
-                'Explicit initial center position passed: '
-                'performing only one init in k-means instead of n_init=%d'
-                % n_init, RuntimeWarning, stacklevel=2)
+                "Explicit initial center position passed: "
+                "performing only one init in k-means instead of n_init=%d" % n_init,
+                RuntimeWarning,
+                stacklevel=2,
+            )
             n_init = 1
 
     # defaults
@@ -549,21 +556,17 @@ def movMF(X, n_clusters, posterior_type='soft', force_weights=None, n_init=10,
         # of the best results (as opposed to one set per run per thread).
         for it in range(n_init):
             # cluster on the sphere
-            (centers,
-             weights,
-             concentrations,
-             posterior,
-             labels,
-             inertia) = _movMF(
-                    X,
-                    n_clusters,
-                    posterior_type=posterior_type,
-                    force_weights=force_weights,
-                    max_iter=max_iter,
-                    verbose=verbose,
-                    init=init,
-                    random_state=random_state,
-                    tol=tol)
+            (centers, weights, concentrations, posterior, labels, inertia) = _movMF(
+                X,
+                n_clusters,
+                posterior_type=posterior_type,
+                force_weights=force_weights,
+                max_iter=max_iter,
+                verbose=verbose,
+                init=init,
+                random_state=random_state,
+                tol=tol,
+            )
 
             # determine if these results are the best so far
             if best_inertia is None or inertia < best_inertia:
@@ -578,31 +581,36 @@ def movMF(X, n_clusters, posterior_type='soft', force_weights=None, n_init=10,
         seeds = random_state.randint(np.iinfo(np.int32).max, size=n_init)
         results = Parallel(n_jobs=n_jobs, verbose=0)(
             delayed(_movMF)(
-                    X,
-                    n_clusters,
-                    posterior_type=posterior_type,
-                    force_weights=force_weights,
-                    max_iter=max_iter,
-                    verbose=verbose,
-                    init=init,
-                    random_state=random_state,
-                    tol=tol)
-            for seed in seeds)
+                X,
+                n_clusters,
+                posterior_type=posterior_type,
+                force_weights=force_weights,
+                max_iter=max_iter,
+                verbose=verbose,
+                init=init,
+                random_state=random_state,
+                tol=tol,
+            )
+            for seed in seeds
+        )
 
         # Get results with the lowest inertia
-        centers, weights, concentrations, posterior, labels, inertia = (
-            zip(*results)
-        )
+        centers, weights, concentrations, posteriors, labels, inertia = zip(*results)
         best = np.argmin(inertia)
         best_labels = labels[best]
         best_inertia = inertia[best]
         best_centers = centers[best]
         best_concentrations = concentrations[best]
+        best_posterior = posteriors[best]
         best_weights = weights[best]
 
     return (
-        best_centers, best_labels, best_inertia, best_weights,
-        best_concentrations, best_posterior
+        best_centers,
+        best_labels,
+        best_inertia,
+        best_weights,
+        best_concentrations,
+        best_posterior,
     )
 
 
@@ -720,10 +728,22 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
         If posterior_type='soft' is used, this matrix will be dense and the
         column values correspond to soft clustering weights.
     """
-    def __init__(self, n_clusters=5, posterior_type='soft', force_weights=None,
-                 n_init=10, n_jobs=1, max_iter=300, verbose=False,
-                 init='random-class', random_state=None, tol=1e-6,
-                 copy_x=True, normalize=True):
+
+    def __init__(
+        self,
+        n_clusters=5,
+        posterior_type="soft",
+        force_weights=None,
+        n_init=10,
+        n_jobs=1,
+        max_iter=300,
+        verbose=False,
+        init="random-class",
+        random_state=None,
+        tol=1e-6,
+        copy_x=True,
+        normalize=True,
+    ):
         self.n_clusters = n_clusters
         self.posterior_type = posterior_type
         self.force_weights = force_weights
@@ -737,31 +757,27 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
         self.copy_x = copy_x
         self.normalize = normalize
 
-        # results from algorithm
-        self.cluster_centers_ = None
-        self.labels = None
-        self.intertia_ = None
-        self.weights_ = None
-        self.concentrations_ = None
-        self.posterior_ = None
-
     def _check_force_weights(self):
         if self.force_weights is None:
             return
 
         if len(self.force_weights) != self.n_clusters:
-            raise ValueError(("len(force_weights)={} but must equal "
-                              "n_clusters={}".format(
-                                    len(self.force_weights),
-                                    self.n_clusters)))
+            raise ValueError(
+                (
+                    "len(force_weights)={} but must equal "
+                    "n_clusters={}".format(len(self.force_weights), self.n_clusters)
+                )
+            )
 
     def _check_fit_data(self, X):
         """Verify that the number of samples given is larger than k"""
-        X = check_array(X, accept_sparse='csr', dtype=[np.float64, np.float32])
+        X = check_array(X, accept_sparse="csr", dtype=[np.float64, np.float32])
         n_samples, n_features = X.shape
         if X.shape[0] < self.n_clusters:
-            raise ValueError("n_samples=%d should be >= n_clusters=%d" % (
-                X.shape[0], self.n_clusters))
+            raise ValueError(
+                "n_samples=%d should be >= n_clusters=%d"
+                % (X.shape[0], self.n_clusters)
+            )
 
         for ee in range(n_samples):
             if sp.issparse(X):
@@ -775,14 +791,14 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
         return X
 
     def _check_test_data(self, X):
-        X = check_array(X, accept_sparse='csr', dtype=FLOAT_DTYPES,
-                        warn_on_dtype=True)
+        X = check_array(X, accept_sparse="csr", dtype=FLOAT_DTYPES, warn_on_dtype=True)
         n_samples, n_features = X.shape
         expected_n_features = self.cluster_centers_.shape[1]
         if not n_features == expected_n_features:
-            raise ValueError("Incorrect number of features. "
-                             "Got %d features, expected %d" % (
-                                 n_features, expected_n_features))
+            raise ValueError(
+                "Incorrect number of features. "
+                "Got %d features, expected %d" % (n_features, expected_n_features)
+            )
 
         for ee in range(n_samples):
             if sp.issparse(X):
@@ -809,15 +825,27 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
         random_state = check_random_state(self.random_state)
         X = self._check_fit_data(X)
 
-        (self.cluster_centers_, self.labels_, self.inertia_, self.weights_,
-         self.concentrations_, self.posterior_) = movMF(
-                X, self.n_clusters, posterior_type=self.posterior_type,
-                force_weights=self.force_weights, n_init=self.n_init,
-                n_jobs=self.n_jobs, max_iter=self.max_iter,
-                verbose=self.verbose, init=self.init,
-                random_state=random_state,
-                tol=self.tol, copy_x=self.copy_x
-            )
+        (
+            self.cluster_centers_,
+            self.labels_,
+            self.inertia_,
+            self.weights_,
+            self.concentrations_,
+            self.posterior_,
+        ) = movMF(
+            X,
+            self.n_clusters,
+            posterior_type=self.posterior_type,
+            force_weights=self.force_weights,
+            n_init=self.n_init,
+            n_jobs=self.n_jobs,
+            max_iter=self.max_iter,
+            verbose=self.verbose,
+            init=self.init,
+            random_state=random_state,
+            tol=self.tol,
+            copy_x=self.copy_x,
+        )
 
         return self
 
@@ -857,7 +885,7 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
         if self.normalize:
             X = normalize(X)
 
-        check_is_fitted(self, 'cluster_centers_')
+        check_is_fitted(self, "cluster_centers_")
         X = self._check_test_data(X)
         return self._transform(X)
 
@@ -886,7 +914,7 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
         if self.normalize:
             X = normalize(X)
 
-        check_is_fitted(self, 'cluster_centers_')
+        check_is_fitted(self, "cluster_centers_")
 
         X = self._check_test_data(X)
         return _labels_inertia(X, self.cluster_centers_)[0]
@@ -907,16 +935,13 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
         if self.normalize:
             X = normalize(X)
 
-        check_is_fitted(self, 'cluster_centers_')
+        check_is_fitted(self, "cluster_centers_")
         X = self._check_test_data(X)
         return -_labels_inertia(X, self.cluster_centers_)[1]
 
     def log_likelihood(self, X):
-        check_is_fitted(self, 'cluster_centers_')
+        check_is_fitted(self, "cluster_centers_")
 
         return _log_likelihood(
-            X,
-            self.cluster_centers_,
-            self.weights_,
-            self.concentrations_
+            X, self.cluster_centers_, self.weights_, self.concentrations_
         )
