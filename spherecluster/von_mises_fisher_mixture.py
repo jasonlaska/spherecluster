@@ -595,12 +595,13 @@ def movMF(
         )
 
         # Get results with the lowest inertia
-        centers, weights, concentrations, posterior, labels, inertia = zip(*results)
+        centers, weights, concentrations, posteriors, labels, inertia = zip(*results)
         best = np.argmin(inertia)
         best_labels = labels[best]
         best_inertia = inertia[best]
         best_centers = centers[best]
         best_concentrations = concentrations[best]
+        best_posterior = posteriors[best]
         best_weights = weights[best]
 
     return (

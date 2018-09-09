@@ -130,6 +130,7 @@ def test_integration_dense(params_in):
     assert len(movmf.concentrations_) == n_clusters
     assert len(movmf.weights_) == n_clusters
     assert len(movmf.labels_) == n_examples
+    assert len(movmf.posterior_) == n_clusters
 
     for center in movmf.cluster_centers_:
         assert_almost_equal(np.linalg.norm(center), 1.0)
@@ -181,6 +182,7 @@ def test_integration_sparse(params_in):
     assert len(movmf.concentrations_) == n_clusters
     assert len(movmf.weights_) == n_clusters
     assert len(movmf.labels_) == n_examples
+    assert len(movmf.posterior_) == n_clusters
 
     for center in movmf.cluster_centers_:
         assert_almost_equal(np.linalg.norm(center), 1.0)
