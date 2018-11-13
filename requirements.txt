@@ -3,4 +3,3 @@ scipy
 scikit-learn>=0.20
 pytest
 nose
-black==18.6b4
