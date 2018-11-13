@@ -70,9 +70,13 @@ def _spherical_kmeans_single_lloyd(
 
         # computation of the means
         if sp.issparse(X):
-            centers = _k_means._centers_sparse(X, sample_weight, labels, n_clusters, distances)
+            centers = _k_means._centers_sparse(
+                X, sample_weight, labels, n_clusters, distances
+            )
         else:
-            centers = _k_means._centers_dense(X, sample_weight, labels, n_clusters, distances)
+            centers = _k_means._centers_dense(
+                X, sample_weight, labels, n_clusters, distances
+            )
 
         # l2-normalize centers (this is the main contibution here)
         centers = normalize(centers)
@@ -142,12 +146,14 @@ def spherical_k_means(
     best_inertia = np.infty
     # avoid forcing order when copy_x=False
     order = "C" if copy_x else None
-    X = check_array(X, accept_sparse='csr', dtype=[np.float64, np.float32],
-                    order=order, copy=copy_x)
+    X = check_array(
+        X, accept_sparse="csr", dtype=[np.float64, np.float32], order=order, copy=copy_x
+    )
     # verify that the number of samples given is larger than k
     if _num_samples(X) < n_clusters:
-        raise ValueError("n_samples=%d should be >= n_clusters=%d" % (
-            _num_samples(X), n_clusters))
+        raise ValueError(
+            "n_samples=%d should be >= n_clusters=%d" % (_num_samples(X), n_clusters)
+        )
     tol = _tolerance(X, tol)
 
     if hasattr(init, "__array__"):
