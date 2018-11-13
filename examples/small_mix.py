@@ -126,10 +126,10 @@ ax = plt.subplot(1, 5, 1, aspect='equal', adjustable='box-forced',
         xlim=[-1.1, 1.1], ylim=[-1.1, 1.1])
 for ex in X_0:
     plt.plot(ex[0], ex[1], 'r+')
-    plt.hold(True)
+
 for ex in X_1:
     plt.plot(ex[0], ex[1], 'b+')
-    plt.hold(True)
+
 ax.set_aspect('equal')
 plt.title('Original data')
 plt.show()
@@ -142,7 +142,6 @@ for ex, label in zip(X, km.labels_):
         plt.plot(ex[0], ex[1], 'r+')
     else:
         plt.plot(ex[0], ex[1], 'b+')
-    plt.hold(True)
 
 ax.set_aspect('equal')
 plt.title('K-means clustering')
@@ -156,7 +155,6 @@ for ex, label in zip(X, skm.labels_):
         plt.plot(ex[0], ex[1], 'r+')
     else:
         plt.plot(ex[0], ex[1], 'b+')
-    plt.hold(True)
 
 ax.set_aspect('equal')
 plt.title('Spherical K-means clustering')
@@ -170,7 +168,6 @@ for ex, label in zip(X, vmf_soft.labels_):
         plt.plot(ex[0], ex[1], 'r+')
     else:
         plt.plot(ex[0], ex[1], 'b+')
-    plt.hold(True)
 
 ax.set_aspect('equal')
 plt.title('soft-movMF clustering')
@@ -184,7 +181,6 @@ for ex, label in zip(X, vmf_hard.labels_):
         plt.plot(ex[0], ex[1], 'r+')
     else:
         plt.plot(ex[0], ex[1], 'b+')
-    plt.hold(True)
 
 ax.set_aspect('equal')
 plt.title('hard-movMF clustering')

@@ -31,7 +31,6 @@ ax = fig.add_subplot(
 colors = ['b', 'r', 'g']
 for nn in range(n_clusters):
     ax.scatter(Xs[nn][0, :], Xs[nn][1, :], Xs[nn][2, :], c=colors[nn])
-    ax.hold(True)
 
 ax.set_aspect('equal')
 plt.axis('off')
