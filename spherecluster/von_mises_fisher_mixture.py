@@ -4,7 +4,7 @@ import numpy as np
 import scipy.sparse as sp
 from scipy.special import iv  # modified Bessel function of first kind, I_v
 from numpy import i0  # modified Bessel function of first kind order 0, I_0
-from scipy.misc import logsumexp
+from scipy.special import logsumexp
 
 from sklearn.base import BaseEstimator, ClusterMixin, TransformerMixin
 from sklearn.cluster.k_means_ import _init_centroids, _tolerance, _validate_center_shape

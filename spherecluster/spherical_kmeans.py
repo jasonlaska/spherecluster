@@ -5,12 +5,14 @@ import scipy.sparse as sp
 
 from sklearn.cluster import KMeans
 from sklearn.cluster.k_means_ import (
+    _check_sample_weight,
     _init_centroids,
     _labels_inertia,
     _tolerance,
     _validate_center_shape,
 )
-from sklearn.utils import check_array, check_random_state, as_float_array
+from sklearn.utils import check_array, check_random_state
+from sklearn.utils.validation import _num_samples
 from sklearn.cluster import _k_means
 from sklearn.preprocessing import normalize
 from sklearn.externals.joblib import Parallel, delayed
@@ -20,6 +22,7 @@ from sklearn.utils.extmath import row_norms, squared_norm
 def _spherical_kmeans_single_lloyd(
     X,
     n_clusters,
+    sample_weight=None,
     max_iter=300,
     init="k-means++",
     verbose=False,
@@ -32,6 +35,8 @@ def _spherical_kmeans_single_lloyd(
     Modified from sklearn.cluster.k_means_.k_means_single_lloyd.
     """
     random_state = check_random_state(random_state)
+
+    sample_weight = _check_sample_weight(X, sample_weight)
 
     best_labels, best_inertia, best_centers = None, None, None
 
@@ -56,6 +61,7 @@ def _spherical_kmeans_single_lloyd(
         #       this doesn't really matter.
         labels, inertia = _labels_inertia(
             X,
+            sample_weight,
             x_squared_norms,
             centers,
             precompute_distances=precompute_distances,
@@ -64,9 +70,13 @@ def _spherical_kmeans_single_lloyd(
 
         # computation of the means
         if sp.issparse(X):
-            centers = _k_means._centers_sparse(X, labels, n_clusters, distances)
+            centers = _k_means._centers_sparse(
+                X, sample_weight, labels, n_clusters, distances
+            )
         else:
-            centers = _k_means._centers_dense(X, labels, n_clusters, distances)
+            centers = _k_means._centers_dense(
+                X, sample_weight, labels, n_clusters, distances
+            )
 
         # l2-normalize centers (this is the main contibution here)
         centers = normalize(centers)
@@ -93,6 +103,7 @@ def _spherical_kmeans_single_lloyd(
         # match cluster centers
         best_labels, best_inertia = _labels_inertia(
             X,
+            sample_weight,
             x_squared_norms,
             best_centers,
             precompute_distances=precompute_distances,
@@ -105,6 +116,7 @@ def _spherical_kmeans_single_lloyd(
 def spherical_k_means(
     X,
     n_clusters,
+    sample_weight=None,
     init="k-means++",
     n_init=10,
     max_iter=300,
@@ -132,11 +144,20 @@ def spherical_k_means(
         )
 
     best_inertia = np.infty
-    X = as_float_array(X, copy=copy_x)
+    # avoid forcing order when copy_x=False
+    order = "C" if copy_x else None
+    X = check_array(
+        X, accept_sparse="csr", dtype=[np.float64, np.float32], order=order, copy=copy_x
+    )
+    # verify that the number of samples given is larger than k
+    if _num_samples(X) < n_clusters:
+        raise ValueError(
+            "n_samples=%d should be >= n_clusters=%d" % (_num_samples(X), n_clusters)
+        )
     tol = _tolerance(X, tol)
 
     if hasattr(init, "__array__"):
-        init = check_array(init, dtype=X.dtype.type, copy=True)
+        init = check_array(init, dtype=X.dtype.type, order="C", copy=True)
         _validate_center_shape(X, n_clusters, init)
 
         if n_init != 1:
@@ -159,6 +180,7 @@ def spherical_k_means(
             labels, inertia, centers, n_iter_ = _spherical_kmeans_single_lloyd(
                 X,
                 n_clusters,
+                sample_weight,
                 max_iter=max_iter,
                 init=init,
                 verbose=verbose,
@@ -180,6 +202,7 @@ def spherical_k_means(
             delayed(_spherical_kmeans_single_lloyd)(
                 X,
                 n_clusters,
+                sample_weight,
                 max_iter=max_iter,
                 init=init,
                 verbose=verbose,
@@ -303,25 +326,32 @@ class SphericalKMeans(KMeans):
         self.n_jobs = n_jobs
         self.normalize = normalize
 
-    def fit(self, X, y=None):
+    def fit(self, X, y=None, sample_weight=None):
         """Compute k-means clustering.
 
         Parameters
         ----------
 
         X : array-like or sparse matrix, shape=(n_samples, n_features)
+
+        y : Ignored
+            not used, present here for API consistency by convention.
+
+        sample_weight : array-like, shape (n_samples,), optional
+            The weights for each observation in X. If None, all observations
+            are assigned equal weight (default: None)
         """
         if self.normalize:
             X = normalize(X)
 
         random_state = check_random_state(self.random_state)
-        X = self._check_fit_data(X)
 
         # TODO: add check that all data is unit-normalized
 
         self.cluster_centers_, self.labels_, self.inertia_, self.n_iter_ = spherical_k_means(
             X,
             n_clusters=self.n_clusters,
+            sample_weight=sample_weight,
             init=self.init,
             n_init=self.n_init,
             max_iter=self.max_iter,

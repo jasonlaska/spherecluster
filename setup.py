@@ -20,7 +20,7 @@ except ImportError:
 
 setup(
     name='spherecluster',
-    version='0.1.6',
+    version='0.1.7',
     description='Clustering on the unit hypersphere in scikit-learn.',
     author='Jason Laska',
     author_email='jason@claralabs.com',

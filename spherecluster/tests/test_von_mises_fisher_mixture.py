@@ -171,8 +171,9 @@ def test_integration_sparse(params_in):
     X = sp.sparse.csr_matrix((n_examples, n_features))
     for ee in range(n_examples):
         ridx = np.random.randint(n_features, size=(n_nonzero))
-        X[ee, ridx] = np.random.randn(n_nonzero)
-        X[ee, :] /= sp.sparse.linalg.norm(X[ee, :])
+        random_values = np.random.randn(n_nonzero)
+        random_values = random_values / np.linalg.norm(random_values)
+        X[ee, ridx] = random_values
 
     params_in.update({"n_clusters": n_clusters})
     movmf = VonMisesFisherMixture(**params_in)
