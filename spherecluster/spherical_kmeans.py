@@ -2,8 +2,10 @@ import warnings
 
 import numpy as np
 import scipy.sparse as sp
+from joblib import Parallel, delayed
 
 from sklearn.cluster import KMeans
+from sklearn.cluster import _k_means
 from sklearn.cluster.k_means_ import (
     _check_sample_weight,
     _init_centroids,
@@ -11,12 +13,10 @@ from sklearn.cluster.k_means_ import (
     _tolerance,
     _validate_center_shape,
 )
-from sklearn.utils import check_array, check_random_state
-from sklearn.utils.validation import _num_samples
-from sklearn.cluster import _k_means
 from sklearn.preprocessing import normalize
-from sklearn.externals.joblib import Parallel, delayed
+from sklearn.utils import check_array, check_random_state
 from sklearn.utils.extmath import row_norms, squared_norm
+from sklearn.utils.validation import _num_samples
 
 
 def _spherical_kmeans_single_lloyd(

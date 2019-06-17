@@ -3,3 +3,4 @@ scipy
 scikit-learn>=0.20
 pytest
 nose
+joblib
