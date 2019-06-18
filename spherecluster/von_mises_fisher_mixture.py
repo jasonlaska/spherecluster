@@ -2,22 +2,21 @@ import warnings
 
 import numpy as np
 import scipy.sparse as sp
-from scipy.special import iv  # modified Bessel function of first kind, I_v
+from joblib import Parallel, delayed
 from numpy import i0  # modified Bessel function of first kind order 0, I_0
+from scipy.special import iv  # modified Bessel function of first kind, I_v
 from scipy.special import logsumexp
 
 from sklearn.base import BaseEstimator, ClusterMixin, TransformerMixin
 from sklearn.cluster.k_means_ import _init_centroids, _tolerance, _validate_center_shape
+from sklearn.metrics.pairwise import cosine_distances
+from sklearn.preprocessing import normalize
+from sklearn.utils import check_array, check_random_state, as_float_array
+from sklearn.utils.extmath import squared_norm
 from sklearn.utils.validation import FLOAT_DTYPES
 from sklearn.utils.validation import check_is_fitted
-from sklearn.utils import check_array, check_random_state, as_float_array
-from sklearn.preprocessing import normalize
-from sklearn.utils.extmath import squared_norm
-from sklearn.metrics.pairwise import cosine_distances
-from sklearn.externals.joblib import Parallel, delayed
 
 from . import spherical_kmeans
-
 
 MAX_CONTENTRATION = 1e10
 
