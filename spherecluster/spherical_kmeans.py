@@ -5,7 +5,9 @@ import scipy.sparse as sp
 from joblib import Parallel, delayed
 
 from sklearn.cluster import KMeans
-from sklearn.cluster import _k_means
+
+# from sklearn.cluster import _k_means
+from sklearn.cluster import _k_means_fast as _k_means
 from sklearn.cluster.k_means_ import (
     _check_sample_weight,
     _init_centroids,
@@ -36,7 +38,7 @@ def _spherical_kmeans_single_lloyd(
     """
     random_state = check_random_state(random_state)
 
-    sample_weight = _check_sample_weight(X, sample_weight)
+    sample_weight = _check_sample_weight(sample_weight, X)
 
     best_labels, best_inertia, best_centers = None, None, None
 
@@ -75,7 +77,11 @@ def _spherical_kmeans_single_lloyd(
             )
         else:
             centers = _k_means._centers_dense(
-                X, sample_weight, labels, n_clusters, distances
+                X.astype(np.float),
+                sample_weight.astype(np.float),
+                labels,
+                n_clusters,
+                distances.astype(np.float),
             )
 
         # l2-normalize centers (this is the main contibution here)

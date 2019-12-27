@@ -68,12 +68,12 @@ def _vmf_normalize(kappa, dim):
 
     Works well on small kappa and mu.
     """
-    num = np.power(kappa, dim / 2. - 1.)
+    num = np.power(kappa, dim / 2.0 - 1.0)
 
-    if dim / 2. - 1. < 1e-15:
-        denom = np.power(2. * np.pi, dim / 2.) * i0(kappa)
+    if dim / 2.0 - 1.0 < 1e-15:
+        denom = np.power(2.0 * np.pi, dim / 2.0) * i0(kappa)
     else:
-        denom = np.power(2. * np.pi, dim / 2.) * iv(dim / 2. - 1., kappa)
+        denom = np.power(2.0 * np.pi, dim / 2.0) * iv(dim / 2.0 - 1.0, kappa)
 
     if np.isinf(num):
         raise ValueError("VMF scaling numerator was inf.")
@@ -95,9 +95,9 @@ def _log_H_asymptotic(nu, kappa):
     from https://cran.r-project.org/web/packages/movMF/index.html
     """
     beta = np.sqrt((nu + 0.5) ** 2)
-    kappa_l = np.min([kappa, np.sqrt((3. * nu + 11. / 2.) * (nu + 3. / 2.))])
+    kappa_l = np.min([kappa, np.sqrt((3.0 * nu + 11.0 / 2.0) * (nu + 3.0 / 2.0))])
     return _S(kappa, nu + 0.5, beta) + (
-        _S(kappa_l, nu, nu + 2.) - _S(kappa_l, nu + 0.5, beta)
+        _S(kappa_l, nu, nu + 2.0) - _S(kappa_l, nu + 0.5, beta)
     )
 
 
@@ -110,9 +110,9 @@ def _S(kappa, alpha, beta):
     See "S <-" in movMF.R and utility function implementation notes from
     https://cran.r-project.org/web/packages/movMF/index.html
     """
-    kappa = 1. * np.abs(kappa)
-    alpha = 1. * alpha
-    beta = 1. * np.abs(beta)
+    kappa = 1.0 * np.abs(kappa)
+    alpha = 1.0 * alpha
+    beta = 1.0 * np.abs(beta)
     a_plus_b = alpha + beta
     u = np.sqrt(kappa ** 2 + beta ** 2)
     if alpha == 0:
@@ -137,7 +137,7 @@ def _vmf_log_asymptotic(X, kappa, mu):
     https://cran.r-project.org/web/packages/movMF/index.html
     """
     n_examples, n_features = X.shape
-    log_vfm = kappa * X.dot(mu).T + -_log_H_asymptotic(n_features / 2. - 1., kappa)
+    log_vfm = kappa * X.dot(mu).T + -_log_H_asymptotic(n_features / 2.0 - 1.0, kappa)
 
     return log_vfm
 
@@ -341,11 +341,11 @@ def _maximization(X, posterior, force_weights=None):
 
         # update concentration (kappa) [TODO: add other kappa approximations]
         rbar = center_norm / (n_examples * weights[cc])
-        concentrations[cc] = rbar * n_features - np.power(rbar, 3.)
+        concentrations[cc] = rbar * n_features - np.power(rbar, 3.0)
         if np.abs(rbar - 1.0) < 1e-10:
             concentrations[cc] = MAX_CONTENTRATION
         else:
-            concentrations[cc] /= 1. - np.power(rbar, 2.)
+            concentrations[cc] /= 1.0 - np.power(rbar, 2.0)
 
         # let python know we can free this (good for large dense X)
         del X_scaled
@@ -784,13 +784,13 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
             else:
                 n = np.linalg.norm(X[ee, :])
 
-            if np.abs(n - 1.) > 1e-4:
+            if np.abs(n - 1.0) > 1e-4:
                 raise ValueError("Data l2-norm must be 1, found {}".format(n))
 
         return X
 
     def _check_test_data(self, X):
-        X = check_array(X, accept_sparse="csr", dtype=FLOAT_DTYPES, warn_on_dtype=True)
+        X = check_array(X, accept_sparse="csr", dtype=FLOAT_DTYPES)
         n_samples, n_features = X.shape
         expected_n_features = self.cluster_centers_.shape[1]
         if not n_features == expected_n_features:
@@ -805,7 +805,7 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
             else:
                 n = np.linalg.norm(X[ee, :])
 
-            if np.abs(n - 1.) > 1e-4:
+            if np.abs(n - 1.0) > 1e-4:
                 raise ValueError("Data l2-norm must be 1, found {}".format(n))
 
         return X
@@ -884,7 +884,7 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
         if self.normalize:
             X = normalize(X)
 
-        check_is_fitted(self, "cluster_centers_")
+        check_is_fitted(self)
         X = self._check_test_data(X)
         return self._transform(X)
 
@@ -913,7 +913,7 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
         if self.normalize:
             X = normalize(X)
 
-        check_is_fitted(self, "cluster_centers_")
+        check_is_fitted(self)
 
         X = self._check_test_data(X)
         return _labels_inertia(X, self.cluster_centers_)[0]
@@ -934,12 +934,12 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
         if self.normalize:
             X = normalize(X)
 
-        check_is_fitted(self, "cluster_centers_")
+        check_is_fitted(self)
         X = self._check_test_data(X)
         return -_labels_inertia(X, self.cluster_centers_)[1]
 
     def log_likelihood(self, X):
-        check_is_fitted(self, "cluster_centers_")
+        check_is_fitted(self)
 
         return _log_likelihood(
             X, self.cluster_centers_, self.weights_, self.concentrations_
