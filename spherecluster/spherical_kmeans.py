@@ -36,7 +36,7 @@ def _spherical_kmeans_single_lloyd(
     """
     random_state = check_random_state(random_state)
 
-    sample_weight = _check_sample_weight(X, sample_weight)
+    sample_weight = _check_sample_weight(sample_weight, X)
 
     best_labels, best_inertia, best_centers = None, None, None
 
