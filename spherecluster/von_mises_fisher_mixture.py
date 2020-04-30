@@ -38,7 +38,7 @@ def _labels_inertia(X, centers):
     n_examples, n_features = X.shape
     n_clusters, n_features = centers.shape
 
-    labels = np.zeros((n_examples,))
+    labels = np.zeros((n_examples,), dtype=int)
     inertia = np.zeros((n_examples,))
 
     for ee in range(n_examples):
