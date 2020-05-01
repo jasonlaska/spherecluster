@@ -487,7 +487,7 @@ def _movMF(
             break
 
     # labels come for free via posterior
-    labels = np.zeros((n_examples,))
+    labels = np.zeros((n_examples,), dtype=int)
     for ee in range(n_examples):
         labels[ee] = np.argmax(posterior[:, ee])
 
