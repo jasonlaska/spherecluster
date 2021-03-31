@@ -7,16 +7,17 @@ from numpy import i0  # modified Bessel function of first kind order 0, I_0
 from scipy.special import iv  # modified Bessel function of first kind, I_v
 from scipy.special import logsumexp
 
-from sklearn.base import BaseEstimator, ClusterMixin, TransformerMixin
-from sklearn.cluster.k_means_ import _init_centroids, _tolerance, _validate_center_shape
+
+from sklearn.cluster import KMeans
+from sklearn.cluster._kmeans import _tolerance, _kmeans_plusplus
 from sklearn.metrics.pairwise import cosine_distances
 from sklearn.preprocessing import normalize
 from sklearn.utils import check_array, check_random_state, as_float_array
 from sklearn.utils.extmath import squared_norm
 from sklearn.utils.validation import FLOAT_DTYPES
 from sklearn.utils.validation import check_is_fitted
-
 from . import spherical_kmeans
+# _init_centroids
 
 MAX_CONTENTRATION = 1e10
 
@@ -219,13 +220,9 @@ def _init_unit_centers(X, n_clusters, random_state, init):
         return centers
 
     elif init == "k-means++":
-        centers = _init_centroids(
-            X,
-            n_clusters,
-            "k-means++",
-            random_state=random_state,
-            x_squared_norms=np.ones((n_examples,)),
-        )
+        centers, _ = _kmeans_plusplus(X, n_clusters,
+                                      random_state=random_state,
+                                      x_squared_norms=np.ones((n_examples,)))
 
         for cc in range(n_clusters):
             centers[cc, :] = centers[cc, :] / np.linalg.norm(centers[cc, :])
@@ -530,9 +527,6 @@ def movMF(
     tol = _tolerance(X, tol)
 
     if hasattr(init, "__array__"):
-        init = check_array(init, dtype=X.dtype.type, copy=True)
-        _validate_center_shape(X, n_clusters, init)
-
         if n_init != 1:
             warnings.warn(
                 "Explicit initial center position passed: "
@@ -613,7 +607,7 @@ def movMF(
     )
 
 
-class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
+class VonMisesFisherMixture(KMeans):
     """Estimator for Mixture of von Mises Fisher clustering on the unit sphere.
 
     Implements the algorithms (i) and (ii) from
@@ -819,6 +813,12 @@ class VonMisesFisherMixture(BaseEstimator, ClusterMixin, TransformerMixin):
         """
         if self.normalize:
             X = normalize(X)
+
+        # Validate init array
+        init = self.init
+        if hasattr(init, "__array__"):
+            init = check_array(init, dtype=X.dtype.type, order="C", copy=True)
+            self._validate_center_shape(X, init)
 
         self._check_force_weights()
         random_state = check_random_state(self.random_state)

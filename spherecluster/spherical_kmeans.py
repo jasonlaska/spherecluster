@@ -6,24 +6,24 @@ from joblib import Parallel, delayed
 
 from sklearn.cluster import KMeans
 
-# from sklearn.cluster import _k_means
 from sklearn.cluster import _k_means_fast as _k_means
-from sklearn.cluster.k_means_ import (
+from sklearn.cluster import _k_means_lloyd
+from sklearn.cluster._kmeans import (
     _check_sample_weight,
-    _init_centroids,
     _labels_inertia,
     _tolerance,
-    _validate_center_shape,
 )
 from sklearn.preprocessing import normalize
 from sklearn.utils import check_array, check_random_state
 from sklearn.utils.extmath import row_norms, squared_norm
 from sklearn.utils.validation import _num_samples
+from sklearn.utils._openmp_helpers import _openmp_effective_n_threads
 
 
 def _spherical_kmeans_single_lloyd(
     X,
     n_clusters,
+    centers_init,
     sample_weight=None,
     max_iter=300,
     init="k-means++",
@@ -31,27 +31,35 @@ def _spherical_kmeans_single_lloyd(
     x_squared_norms=None,
     random_state=None,
     tol=1e-4,
-    precompute_distances=True,
+    n_threads=1,
 ):
     """
     Modified from sklearn.cluster.k_means_.k_means_single_lloyd.
     """
     random_state = check_random_state(random_state)
 
-    sample_weight = _check_sample_weight(sample_weight, X)
+    sample_weight = _check_sample_weight(sample_weight, X, dtype=X.dtype)
 
     best_labels, best_inertia, best_centers = None, None, None
-
-    # init
-    centers = _init_centroids(
-        X, n_clusters, init, random_state=random_state, x_squared_norms=x_squared_norms
-    )
-    if verbose:
-        print("Initialization complete")
 
     # Allocate memory to store the distances for each sample to its
     # closer center for reallocation in case of ties
     distances = np.zeros(shape=(X.shape[0],), dtype=X.dtype)
+
+    # Buffers to avoid new allocations at each iteration.
+    centers = centers_init
+    centers_new = np.zeros_like(centers)
+    labels = np.full(X.shape[0], -1, dtype=np.int32)
+    labels_old = labels.copy()
+    weight_in_clusters = np.zeros(n_clusters, dtype=X.dtype)
+    center_shift = np.zeros(n_clusters, dtype=X.dtype)
+
+    if sp.issparse(X):
+        lloyd_iter = _k_means_lloyd.lloyd_iter_chunked_sparse
+        _inertia = _k_means._inertia_sparse
+    else:
+        lloyd_iter = _k_means_lloyd.lloyd_iter_chunked_dense
+        _inertia = _k_means._inertia_dense
 
     # iterations
     for i in range(max_iter):
@@ -66,24 +74,11 @@ def _spherical_kmeans_single_lloyd(
             sample_weight,
             x_squared_norms,
             centers,
-            precompute_distances=precompute_distances,
-            distances=distances,
         )
+        lloyd_iter(X, sample_weight, x_squared_norms, centers, centers_new,
+                   weight_in_clusters, labels, center_shift, n_threads)
 
-        # computation of the means
-        if sp.issparse(X):
-            centers = _k_means._centers_sparse(
-                X, sample_weight, labels, n_clusters, distances
-            )
-        else:
-            centers = _k_means._centers_dense(
-                X.astype(np.float),
-                sample_weight.astype(np.float),
-                labels,
-                n_clusters,
-                distances.astype(np.float),
-            )
-
+        centers, centers_new = centers_new, centers
         # l2-normalize centers (this is the main contibution here)
         centers = normalize(centers)
 
@@ -112,8 +107,6 @@ def _spherical_kmeans_single_lloyd(
             sample_weight,
             x_squared_norms,
             best_centers,
-            precompute_distances=precompute_distances,
-            distances=distances,
         )
 
     return best_labels, best_inertia, best_centers, i + 1
@@ -122,6 +115,7 @@ def _spherical_kmeans_single_lloyd(
 def spherical_k_means(
     X,
     n_clusters,
+    centers_init,
     sample_weight=None,
     init="k-means++",
     n_init=10,
@@ -163,9 +157,6 @@ def spherical_k_means(
     tol = _tolerance(X, tol)
 
     if hasattr(init, "__array__"):
-        init = check_array(init, dtype=X.dtype.type, order="C", copy=True)
-        _validate_center_shape(X, n_clusters, init)
-
         if n_init != 1:
             warnings.warn(
                 "Explicit initial center position passed: "
@@ -186,7 +177,8 @@ def spherical_k_means(
             labels, inertia, centers, n_iter_ = _spherical_kmeans_single_lloyd(
                 X,
                 n_clusters,
-                sample_weight,
+                centers_init=centers_init,
+                sample_weight=sample_weight,
                 max_iter=max_iter,
                 init=init,
                 verbose=verbose,
@@ -332,6 +324,51 @@ class SphericalKMeans(KMeans):
         self.n_jobs = n_jobs
         self.normalize = normalize
 
+    def _check_params(self, X):
+        # n_jobs
+        if self.n_jobs != 'deprecated':
+            warnings.warn("'n_jobs' was deprecated in version 0.23 and will be"
+                          " removed in 1.0 (renaming of 0.25).", FutureWarning)
+            self._n_threads = self.n_jobs
+        else:
+            self._n_threads = None
+        self._n_threads = _openmp_effective_n_threads(self._n_threads)
+
+        # n_init
+        if self.n_init <= 0:
+            raise ValueError(
+                f"n_init should be > 0, got {self.n_init} instead.")
+        self._n_init = self.n_init
+
+        # max_iter
+        if self.max_iter <= 0:
+            raise ValueError(
+                f"max_iter should be > 0, got {self.max_iter} instead.")
+
+        # n_clusters
+        if X.shape[0] < self.n_clusters:
+            raise ValueError(f"n_samples={X.shape[0]} should be >= "
+                             f"n_clusters={self.n_clusters}.")
+
+        # tol
+        self._tol = _tolerance(X, self.tol)
+
+        # init
+        if not (hasattr(self.init, '__array__') or callable(self.init)
+                or (isinstance(self.init, str)
+                    and self.init in ["k-means++", "random"])):
+            raise ValueError(
+                f"init should be either 'k-means++', 'random', a ndarray or a "
+                f"callable, got '{self.init}' instead.")
+
+        if hasattr(self.init, '__array__') and self._n_init != 1:
+            warnings.warn(
+                f"Explicit initial center position passed: performing only"
+                f" one init in {self.__class__.__name__} instead of "
+                f"n_init={self._n_init}.", RuntimeWarning, stacklevel=2)
+            self._n_init = 1
+
+
     def fit(self, X, y=None, sample_weight=None):
         """Compute k-means clustering.
 
@@ -349,14 +386,29 @@ class SphericalKMeans(KMeans):
         """
         if self.normalize:
             X = normalize(X)
+        self._check_params(X)
 
         random_state = check_random_state(self.random_state)
 
+        # Validate init array
+        init = self.init
+        if hasattr(init, "__array__"):
+            init = check_array(init, dtype=X.dtype.type, order="C", copy=True)
+            self._validate_center_shape(X, init)
+
         # TODO: add check that all data is unit-normalized
+        x_squared_norms = row_norms(X, squared=True)
+        centers_init = self._init_centroids(
+            X,
+            init=self.init,
+            random_state=random_state,
+            x_squared_norms=x_squared_norms
+        )
 
         self.cluster_centers_, self.labels_, self.inertia_, self.n_iter_ = spherical_k_means(
             X,
             n_clusters=self.n_clusters,
+            centers_init=centers_init,
             sample_weight=sample_weight,
             init=self.init,
             n_init=self.n_init,
